@@ -93,14 +93,14 @@ export default HomePage;
 
 ## Nested Routes
 
-- app/about/info/page.tsx
+- app/info/contact/page.tsx
 - if no page.tsx in a segment will result in 404
 
 ```tsx
-function AboutInfoPage() {
-  return <h1 className='text-7xl'>AboutInfoPage</h1>;
+function ContactPage() {
+  return <h1 className='text-7xl'>ContactPage</h1>;
 }
-export default AboutInfoPage;
+export default ContactPage;
 ```
 
 ## CSS and Tailwind
@@ -140,7 +140,7 @@ export default function RootLayout({
 
 ## Challenge - Navbar
 
-- create components/navbar.tsx
+- create components/Navbar.tsx
 - render in layout.tsx
 
 ```tsx
@@ -290,6 +290,7 @@ export default CounterPage;
 
 ## Fetch Data in Server Components
 
+- create tours/page.tsx
 - just add async and start using await 🚀🚀🚀
 - the same for db
 - Next.tsx extends the native Web fetch() API to allow each request on the server to set its own persistent caching semantics.
@@ -308,7 +309,7 @@ type Tour = {
 async function ToursPage() {
   const response = await fetch(url);
   const data: Tour[] = await response.json();
-
+  console.log(data);
   return (
     <section>
       <h1 className='text-3xl mb-4'>Tours</h1>
@@ -434,7 +435,7 @@ return (
 ## Next Image Component
 
 - get random image from pexels site
-  [Random Drink](https://www.pexels.com/photo/assorted-map-pieces-2859169/)
+  [Random Image](https://www.pexels.com/photo/assorted-map-pieces-2859169/)
 
 The Next.js Image component extends the HTML <img> element with features for automatic image optimization:
 
@@ -444,9 +445,9 @@ The Next.js Image component extends the HTML <img> element with features for aut
 - Asset Flexibility: On-demand image resizing, even for images stored on remote servers
 
 - disable cache
-
 - width and height
-- priority
+
+- priority property to prioritize the image for loading
   When true, the image will be considered high priority and preload.
 
 ```tsx
@@ -483,30 +484,6 @@ export default page;
 - Since Next.js does not have access to remote files during the build process, you'll need to provide the width, height and optional blurDataURL props manually.
 
 - The width and height attributes are used to infer the correct aspect ratio of image and avoid layout shift from the image loading in. The width and height do not determine the rendered size of the image file.
-
-- To safely allow optimizing images, define a list of supported URL patterns in next.config.js. Be as specific as possible to prevent malicious usage.
-
-- restart dev server
-
-- priority property to prioritize the image for loading
-
-```js
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'www.course-api.com',
-        port: '',
-        pathname: '/images/**',
-      },
-    ],
-  },
-};
-
-export default nextConfig;
-```
 
 ```tsx
 import mapsImg from '@/images/maps.jpg';
@@ -546,10 +523,40 @@ const page = async ({ params }: { params: { id: string } }) => {
 export default page;
 ```
 
-## Remote Images - Responsive
+```mjs
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'www.course-api.com',
+        port: '',
+        pathname: '/images/**',
+      },
+    ],
+  },
+};
+
+export default nextConfig;
+```
+
+- To safely allow optimizing images, define a list of supported URL patterns in next.config.mjs. Be as specific as possible to prevent malicious usage.
+
+- restart dev server
+
+## Responsive Images
 
 - The fill prop allows your image to be sized by its parent element
 - sizes property helps the browser select the most appropriate image size to load based on the user's device and screen size, improving website performance and user experience.
+
+A string that provides information about how wide the image will be at different breakpoints. The value of sizes will greatly affect performance for images using fill or which are styled to have a responsive size.
+
+The sizes property serves two important purposes related to image performance:
+
+First, the value of sizes is used by the browser to determine which size of the image to download, from next/image's automatically-generated source set. When the browser chooses, it does not yet know the size of the image on the page, so it selects an image that is the same size or larger than the viewport. The sizes property allows you to tell the browser that the image will actually be smaller than full screen. If you don't specify a sizes value in an image with the fill property, a default value of 100vw (full screen width) is used.
+
+Second, the sizes property configures how next/image automatically generates an image source set. If no sizes value is present, a small source set is generated, suitable for a fixed-size image. If sizes is defined, a large source set is generated, suitable for a responsive image. If the sizes property includes sizes such as 50vw, which represent a percentage of the viewport width, then the source set is trimmed to not include any values which are too small to ever be necessary.
 
 tours.tsx
 
@@ -569,6 +576,7 @@ return (
               alt={tour.name}
               fill
               sizes='33vw'
+              // sizes='(max-width:768px) 100vw,(max-width:1200px) 50vw, 33vw'
               priority
               className='object-cover rounded'
             />
@@ -599,8 +607,8 @@ return (
 
 - create app/(dashboard)/auth/[sign-in]
 
-```js
-const SignInPage = ({ params }) => {
+```ts
+const SignInPage = ({ params }: { params: { 'sign-in': string } }) => {
   console.log(params);
   return <div>SignInPage</div>;
 };
@@ -609,6 +617,15 @@ export default SignInPage;
 
 - create app/(dashboard)/auth/[...sign-in]
 - create app/(dashboard)/auth/[[...sign-in]]
+
+```ts
+const SignInPage = ({ params }: { params: { 'sign-in': string[] } }) => {
+  console.log(params);
+  console.log(params['sign-in'][1]);
+  return <div>SignInPage :{params['sign-in'][1]}</div>;
+};
+export default SignInPage;
+```
 
 ## Server Actions
 
@@ -631,7 +648,7 @@ Rules :
 RSC - React Server Component
 RCC - React Client Component
 
-```js
+```tsx
 export default function ServerComponent() {
   async function myAction(formData) {
     'use server';
@@ -650,7 +667,7 @@ export default function ServerComponent() {
 
 utils/actions.js
 
-```js
+```tsx
 'use server';
 
 export async function myAction() {
@@ -658,7 +675,7 @@ export async function myAction() {
 }
 ```
 
-```js
+```tsx
 'use client';
 
 import { myAction } from './actions';
@@ -757,7 +774,8 @@ import { createUser } from '@/utils/actions';
 export const createUser = async (formData: FormData) => {
   const firstName = formData.get('firstName') as string;
   const lastName = formData.get('lastName') as string;
-
+  const rawData = Object.fromEntries(formData);
+  console.log(rawData);
   console.log({ firstName, lastName });
 };
 ```
@@ -1002,24 +1020,6 @@ function DeleteButton({ id }: { id: string }) {
 export default DeleteButton;
 ```
 
-## Bind Option
-
-- An alternative to passing arguments as hidden input fields in the form (e.g. `<input type="hidden" name="userId" value={userId} />`) is to use the bind option. With this approach, the value is not part of the rendered HTML and will not be encoded.
-
-- .bind works in both Server and Client Components. It also supports progressive enhancement.
-
-```ts
-export const removeUser = async (id: string, formData: FormData) => {
-  const name = formData.get('name') as string;
-  console.log(name);
-
-  const users = await fetchUsers();
-  const updatedUsers = users.filter((user) => user.id !== id);
-  await writeFile('users.json', JSON.stringify(updatedUsers));
-  revalidatePath('/actions');
-};
-```
-
 ```tsx
 import { deleteUser, removeUser } from '@/utils/actions';
 
@@ -1040,6 +1040,24 @@ function DeleteButton({ id }: { id: string }) {
 export default DeleteButton;
 ```
 
+## Bind Option
+
+- An alternative to passing arguments as hidden input fields in the form (e.g. `<input type="hidden" name="userId" value={userId} />`) is to use the bind option. With this approach, the value is not part of the rendered HTML and will not be encoded.
+
+- .bind works in both Server and Client Components. It also supports progressive enhancement.
+
+```ts
+export const removeUser = async (id: string, formData: FormData) => {
+  const name = formData.get('name') as string;
+  console.log(name);
+
+  const users = await fetchUsers();
+  const updatedUsers = users.filter((user) => user.id !== id);
+  await writeFile('users.json', JSON.stringify(updatedUsers));
+  revalidatePath('/actions');
+};
+```
+
 ## Route Handlers
 
 - install Thunder Client
@@ -1047,13 +1065,13 @@ export default DeleteButton;
 Route Handlers allow you to create custom request handlers for a given route using the Web Request and Response APIs.
 
 - in app create folder "api"
-- in there create folder "users" with route.js file
+- in there create folder "users" with route.ts file
 
 The following HTTP methods are supported: GET, POST, PUT, PATCH, DELETE, HEAD, and OPTIONS. If an unsupported method is called, Next.js will return a 405 Method Not Allowed response.
 
 In addition to supporting native Request and Response. Next.js extends them with NextRequest and NextResponse to provide convenient helpers for advanced use cases.
 
-app/api/tasks/route.js
+app/api/users/route.ts
 
 ```ts
 // the following HTTP methods are supported: GET, POST, PUT, PATCH, DELETE, HEAD, and OPTIONS. If an unsupported method is called, Next.js will return a 405 Method Not Allowed response.
@@ -1074,16 +1092,50 @@ export const POST = async (request: Request) => {
 };
 ```
 
+```ts
+import { fetchUsers, saveUser } from '@/utils/actions';
+
+export const GET = async (request: Request) => {
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
+  console.log(id);
+
+  const users = await fetchUsers();
+  return Response.json({ users });
+};
+```
+
+```ts
+import { fetchUsers, saveUser } from '@/utils/actions';
+import { NextRequest, NextResponse } from 'next/server';
+
+export const GET = async (request: NextRequest) => {
+  console.log(request.url);
+  console.log(request.nextUrl.searchParams.get('id'));
+
+  const users = await fetchUsers();
+  return NextResponse.redirect(new URL('/', request.url));
+};
+```
+
+The URL constructor takes two arguments: url and base. If the url is a relative URL, then base is required. If url is an absolute URL, then base is ignored.
+
+Here, '/' is the url and request.url is the base.
+
+This means it's creating a new URL object that represents the root of the URL contained in request.url.
+
+For example, if request.url is 'http://example.com/path/to/resource', the new URL object would represent 'http://example.com/'.
+
 ## Middleware
 
 [Docs](https://nextjs.org/docs/app/building-your-application/routing/middleware)
 
 Middleware in Next.js is a piece of code that allows you to perform actions before a request is completed and modify the response accordingly.
 
-- create middleware.js in the root
+- create middleware.ts in the root
 - by default will be invoked for every route in your project
 
-```js
+```ts
 export function middleware(request) {
   return Response.json({ msg: 'hello there' });
 }
@@ -1093,7 +1145,7 @@ export const config = {
 };
 ```
 
-```js
+```ts
 import { NextResponse } from 'next/server';
 
 // This function can be marked `async` if using `await` inside
@@ -1103,6 +1155,18 @@ export function middleware(request) {
 
 // See "Matching Paths" below to learn more
 export const config = {
-  matcher: ['/about/:path*', '/users/:path*'],
+  matcher: ['/about/:path*', '/tours/:path*'],
 };
 ```
+
+## Local Build
+
+- cleanup middleware
+- fix css in UsersList.tsx
+- remove all users from 'users.json'
+- 'npm run build' followed by 'npm start'
+
+## Caching
+
+- [Vercel Video](https://www.youtube.com/watch?v=VBlSe8tvg4U)
+- [Docs](https://nextjs.org/docs/app/building-your-application/caching)

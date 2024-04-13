@@ -1,6 +1,7 @@
-const url = 'https://www.course-api.com/react-tours-project';
-import Image from 'next/image';
 import Link from 'next/link';
+import Image from 'next/image';
+const url = 'https://www.course-api.com/react-tours-project';
+
 type Tour = {
   id: string;
   name: string;
@@ -34,11 +35,12 @@ async function ToursPage() {
                   src={tour.image}
                   alt={tour.name}
                   fill
-                  sizes='33vw'
+                  sizes='(max-width:768px) 100vw,(max-width:1200px) 50vw,33vw'
                   priority
                   className='object-cover rounded'
                 />
               </div>
+
               <h2>{tour.name}</h2>
             </Link>
           );
