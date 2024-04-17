@@ -1,7 +1,9 @@
 'use client';
+
 import { SignOutButton } from '@clerk/nextjs';
 import { useToast } from '../ui/use-toast';
 import { useRouter } from 'next/navigation';
+
 function SignOutLink() {
   const { toast } = useToast();
   const router = useRouter();

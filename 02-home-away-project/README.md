@@ -161,7 +161,7 @@ return (
 npm install react-icons
 ```
 
-[Lucide Icons](https://react-icons.github.io/react-icons/)
+[React Icons](https://react-icons.github.io/react-icons/)
 
 ```tsx
 import Link from 'next/link';
@@ -187,7 +187,7 @@ import { Input } from '../ui/input';
 function NavSearch() {
   return (
     <Input
-      type='search'
+      type='text'
       placeholder='find a property...'
       className='max-w-xs dark:bg-muted '
     />
@@ -824,6 +824,8 @@ export const createProfileAction = async (
 
 ### Supabase
 
+[Supabase Docs](https://supabase.com/)
+
 - create account and organization
 - create project
 - setup password in .env (optional)
@@ -890,6 +892,106 @@ DIRECT_URL=""
 - DATABASE_URL : Transaction + Password + "?pgbouncer=true&connection_limit=1"
 - DIRECT_URL : Session + Password
 
+```prisma
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  directUrl         = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model TestProfile {
+  id        String     @id @default(uuid())
+  name     String
+}
+
+```
+
+- npx prisma migrate dev --name init
+- npx prisma db push
+
+npx prisma migrate dev --name init creates a new migration for your database schema changes and applies it, while npx prisma db push directly updates the database schema without creating a migration.n the context of databases, a migration is a set of operations that modify the database schema, helping it evolve over time while preserving existing data.
+
+### Optional - Prisma Crud
+
+[Prisma Docs](https://www.prisma.io/docs/concepts/components/prisma-client/crud)
+
+- Create Single Record
+
+```js
+const task = await prisma.task.create({
+  data: {
+    content: 'some task',
+  },
+});
+```
+
+- Get All Records
+
+```js
+const tasks = await prisma.task.findMany();
+```
+
+- Get record by ID or unique identifier
+
+```js
+// By unique identifier
+const user = await prisma.user.findUnique({
+  where: {
+    email: 'elsa@prisma.io',
+  },
+});
+
+// By ID
+const task = await prisma.task.findUnique({
+  where: {
+    id: id,
+  },
+});
+```
+
+- Update Record
+
+```js
+const updateTask = await prisma.task.update({
+  where: {
+    id: id,
+  },
+  data: {
+    content: 'updated task',
+  },
+});
+```
+
+- Update or create records
+
+```js
+const upsertTask = await prisma.task.upsert({
+  where: {
+    id: id,
+  },
+  update: {
+    content: 'some value',
+  },
+  create: {
+    content: 'some value',
+  },
+});
+```
+
+- Delete a single record
+
+```js
+const deleteTask = await prisma.task.delete({
+  where: {
+    id: id,
+  },
+});
+```
+
 ### Profile Model
 
 ```prisma
@@ -905,6 +1007,10 @@ model Profile {
   updatedAt    DateTime   @updatedAt
 
 }
+```
+
+```bash
+npx prisma db push
 ```
 
 ## CreateProfile Action - Complete

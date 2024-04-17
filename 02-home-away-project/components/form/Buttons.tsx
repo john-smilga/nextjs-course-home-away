@@ -1,4 +1,5 @@
 'use client';
+
 import { ReloadIcon } from '@radix-ui/react-icons';
 import { useFormStatus } from 'react-dom';
 import { Button } from '@/components/ui/button';
@@ -13,11 +14,12 @@ export function SubmitButton({
   text = 'submit',
 }: SubmitButtonProps) {
   const { pending } = useFormStatus();
+
   return (
     <Button
       type='submit'
       disabled={pending}
-      className={`capitalize ${className}`}
+      className={`capitalize ${className} `}
       size='lg'
     >
       {pending ? (

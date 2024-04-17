@@ -1,4 +1,4 @@
-function Favorites() {
-  return <h1 className='text-3xl'>Favorites</h1>;
+function FavoritesPage() {
+  return <h1 className='text-3xl'>FavoritesPage</h1>;
 }
-export default Favorites;
+export default FavoritesPage;

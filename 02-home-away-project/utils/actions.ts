@@ -32,7 +32,6 @@ export const createProfileAction = async (
 
     const rawData = Object.fromEntries(formData);
     const validatedFields = profileSchema.parse(rawData);
-
     await db.profile.create({
       data: {
         clerkId: user.id,
@@ -64,18 +63,18 @@ export const fetchProfileImage = async () => {
       profileImage: true,
     },
   });
+
   return profile?.profileImage;
 };
 
 export const fetchProfile = async () => {
   const user = await getAuthUser();
-
   const profile = await db.profile.findUnique({
     where: {
       clerkId: user.id,
     },
   });
-  if (!profile) return redirect('/profile/create');
+  if (!profile) redirect('/profile/create');
   return profile;
 };
 
@@ -84,10 +83,11 @@ export const updateProfileAction = async (
   formData: FormData
 ): Promise<{ message: string }> => {
   const user = await getAuthUser();
+
   try {
     const rawData = Object.fromEntries(formData);
-
     const validatedFields = profileSchema.safeParse(rawData);
+
     if (!validatedFields.success) {
       const errors = validatedFields.error.errors.map((error) => error.message);
       throw new Error(errors.join(','));
@@ -99,6 +99,7 @@ export const updateProfileAction = async (
       },
       data: validatedFields.data,
     });
+
     revalidatePath('/profile');
     return { message: 'Profile updated successfully' };
   } catch (error) {

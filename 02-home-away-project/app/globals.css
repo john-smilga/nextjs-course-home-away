@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .container {
+    @apply mx-auto max-w-6xl xl:max-w-7xl px-8;
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -55,11 +61,5 @@
   }
   body {
     @apply bg-background text-foreground;
-  }
-}
-
-@layer components {
-  .container {
-    @apply mx-auto max-w-6xl xl:max-w-7xl px-8;
   }
 }

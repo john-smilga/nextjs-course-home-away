@@ -1,4 +1,4 @@
-function Properties() {
-  return <h1 className='text-3xl'>Properties</h1>;
+function PropertiesPage() {
+  return <h1 className='text-3xl'>PropertiesPage</h1>;
 }
-export default Properties;
+export default PropertiesPage;
