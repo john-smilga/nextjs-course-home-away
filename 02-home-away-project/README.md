@@ -161,7 +161,7 @@ return (
 npm install react-icons
 ```
 
-[React Icons](https://react-icons.github.io/react-icons/)
+[Lucide Icons](https://react-icons.github.io/react-icons/)
 
 ```tsx
 import Link from 'next/link';
@@ -187,7 +187,7 @@ import { Input } from '../ui/input';
 function NavSearch() {
   return (
     <Input
-      type='text'
+      type='search'
       placeholder='find a property...'
       className='max-w-xs dark:bg-muted '
     />
@@ -824,8 +824,6 @@ export const createProfileAction = async (
 
 ### Supabase
 
-[Supabase Docs](https://supabase.com/)
-
 - create account and organization
 - create project
 - setup password in .env (optional)
@@ -892,106 +890,6 @@ DIRECT_URL=""
 - DATABASE_URL : Transaction + Password + "?pgbouncer=true&connection_limit=1"
 - DIRECT_URL : Session + Password
 
-```prisma
-datasource db {
-  provider          = "postgresql"
-  url               = env("DATABASE_URL")
-  directUrl         = env("DIRECT_URL")
-}
-
-generator client {
-  provider = "prisma-client-js"
-}
-
-model TestProfile {
-  id        String     @id @default(uuid())
-  name     String
-}
-
-```
-
-- npx prisma migrate dev --name init
-- npx prisma db push
-
-npx prisma migrate dev --name init creates a new migration for your database schema changes and applies it, while npx prisma db push directly updates the database schema without creating a migration.n the context of databases, a migration is a set of operations that modify the database schema, helping it evolve over time while preserving existing data.
-
-### Optional - Prisma Crud
-
-[Prisma Docs](https://www.prisma.io/docs/concepts/components/prisma-client/crud)
-
-- Create Single Record
-
-```js
-const task = await prisma.task.create({
-  data: {
-    content: 'some task',
-  },
-});
-```
-
-- Get All Records
-
-```js
-const tasks = await prisma.task.findMany();
-```
-
-- Get record by ID or unique identifier
-
-```js
-// By unique identifier
-const user = await prisma.user.findUnique({
-  where: {
-    email: 'elsa@prisma.io',
-  },
-});
-
-// By ID
-const task = await prisma.task.findUnique({
-  where: {
-    id: id,
-  },
-});
-```
-
-- Update Record
-
-```js
-const updateTask = await prisma.task.update({
-  where: {
-    id: id,
-  },
-  data: {
-    content: 'updated task',
-  },
-});
-```
-
-- Update or create records
-
-```js
-const upsertTask = await prisma.task.upsert({
-  where: {
-    id: id,
-  },
-  update: {
-    content: 'some value',
-  },
-  create: {
-    content: 'some value',
-  },
-});
-```
-
-- Delete a single record
-
-```js
-const deleteTask = await prisma.task.delete({
-  where: {
-    id: id,
-  },
-});
-```
-
 ### Profile Model
 
 ```prisma
@@ -1007,10 +905,6 @@ model Profile {
   updatedAt    DateTime   @updatedAt
 
 }
-```
-
-```bash
-npx prisma db push
 ```
 
 ## CreateProfile Action - Complete
@@ -1264,9 +1158,885 @@ export const updateProfileAction = async (
     revalidatePath('/profile');
     return { message: 'Profile updated successfully' };
   } catch (error) {
-    return {
-      message: error instanceof Error ? error.message : 'An error occurred',
-    };
+    return renderError(error);
   }
 };
+```
+
+### ValidateWithZodSchema
+
+schemas.ts
+
+```ts
+export function validateWithZodSchema<T>(
+  schema: ZodSchema<T>,
+  data: unknown
+): T {
+  const result = schema.safeParse(data);
+  if (!result.success) {
+    const errors = result.error.errors.map((error) => error.message);
+
+    throw new Error(errors.join(', '));
+  }
+  return result.data;
+}
+```
+
+actions.ts
+
+```ts
+// createProfileAction
+
+const validatedFields = validateWithZodSchema(profileSchema, rawData);
+
+// updateProfileAction
+const validatedFields = validateWithZodSchema(profileSchema, rawData);
+
+await db.profile.update({
+  where: {
+    clerkId: user.id,
+  },
+  data: validatedFields,
+});
+```
+
+## ImageInput
+
+components/form/ImageInput.tsx
+
+```tsx
+import { Label } from '../ui/label';
+import { Input } from '../ui/input';
+
+function ImageInput() {
+  const name = 'image';
+  return (
+    <div className='mb-2'>
+      <Label htmlFor={name} className='capitalize'>
+        Image
+      </Label>
+      <Input
+        id={name}
+        name={name}
+        type='file'
+        required
+        accept='image/*'
+        className='max-w-xs'
+      />
+    </div>
+  );
+}
+export default ImageInput;
+```
+
+### SubmitButton
+
+```tsx
+type btnSize = 'default' | 'lg' | 'sm';
+
+type SubmitButtonProps = {
+  className?: string;
+  text?: string;
+  size?: btnSize;
+};
+
+export function SubmitButton({
+  className = '',
+  text = 'submit',
+  size = 'lg',
+}: SubmitButtonProps) {
+  const { pending } = useFormStatus();
+  return (
+    <Button
+      type='submit'
+      disabled={pending}
+      className={`capitalize ${className}`}
+      size={size}
+    >
+      {pending ? (
+        <>
+          <ReloadIcon className='mr-2 h-4 w-4 animate-spin' />
+          Please wait...
+        </>
+      ) : (
+        text
+      )}
+    </Button>
+  );
+}
+```
+
+### ImageInputContainer
+
+components/form/ImageInputContainer.tsx
+
+```tsx
+'use client';
+import { useState } from 'react';
+import Image from 'next/image';
+import { Button } from '../ui/button';
+import FormContainer from './FormContainer';
+import ImageInput from './ImageInput';
+import { SubmitButton } from './Buttons';
+import { type actionFunction } from '@/utils/types';
+import { User2Icon } from 'lucide-react';
+
+type ImageInputContainerProps = {
+  image: string;
+  name: string;
+  action: actionFunction;
+  text: string;
+  children?: React.ReactNode;
+};
+
+function ImageInputContainer(props: ImageInputContainerProps) {
+  const { image, name, action, text } = props;
+  const [isUpdateFormVisible, setUpdateFormVisible] = useState(false);
+
+  const userIcon = (
+    <User2Icon className='w-24 h-24 bg-primary rounded-md text-white mb-4' />
+  );
+  return (
+    <div>
+      {image ? (
+        <Image
+          src={image}
+          width={100}
+          height={100}
+          className='rounded-md object-cover mb-4 w-24 h-24'
+          alt={name}
+        />
+      ) : (
+        userIcon
+      )}
+
+      <Button
+        variant='outline'
+        size='sm'
+        onClick={() => setUpdateFormVisible((prev) => !prev)}
+      >
+        {text}
+      </Button>
+      {isUpdateFormVisible && (
+        <div className='max-w-lg mt-4'>
+          <FormContainer action={action}>
+            {props.children}
+            <ImageInput />
+            <SubmitButton size='sm' />
+          </FormContainer>
+        </div>
+      )}
+    </div>
+  );
+}
+export default ImageInputContainer;
+```
+
+### updateProfileImageAction
+
+actions.ts
+
+```ts
+export const updateProfileImageAction = async (
+  prevState: any,
+  formData: FormData
+): Promise<{ message: string }> => {
+  return { message: 'Profile image updated successfully' };
+};
+```
+
+### Profile Page
+
+```tsx
+import {
+  updateProfileAction,
+  fetchProfile,
+  updateProfileImageAction,
+} from '@/utils/actions';
+
+import ImageInputContainer from '@/components/form/ImageInputContainer';
+
+/* image input container */
+
+<ImageInputContainer
+  image={profile.profileImage}
+  name={profile.username}
+  action={updateProfileImageAction}
+  text='Update Profile Image'
+/>;
+```
+
+### Remote Patterns
+
+```mjs
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'img.clerk.com',
+      },
+    ],
+  },
+};
+
+export default nextConfig;
+```
+
+### updateImageSchema
+
+schemas.ts
+
+```ts
+export const updateImageSchema = z.object({
+  image: validateFile(),
+});
+
+function validateFile() {
+  const maxUploadSize = 1024 * 1024;
+  const acceptedFileTypes = ['image/'];
+  return z
+    .instanceof(File)
+    .refine((file) => {
+      return !file || file.size <= maxUploadSize;
+    }, `File size must be less than 1 MB`)
+    .refine((file) => {
+      return (
+        !file || acceptedFileTypes.some((type) => file.type.startsWith(type))
+      );
+    }, 'File must be an image');
+}
+```
+
+The .refine() method in Zod is used to add custom validation to a Zod schema. It takes two arguments:
+
+A function that takes a value and returns a boolean. This function is the validation rule. If it returns true, the validation passes. If it returns false, the validation fails.
+A string that is the error message to be returned when the validation fails.
+
+### updateProfileImageAction
+
+```ts
+export const updateProfileImageAction = async (
+  prevState: any,
+  formData: FormData
+): Promise<{ message: string }> => {
+  const user = await getAuthUser();
+  try {
+    const image = formData.get('image') as File;
+    const validatedFields = validateWithZodSchema(updateImageSchema, { image });
+
+    return { message: 'Profile image updated successfully' };
+  } catch (error) {
+    return renderError(error);
+  }
+};
+```
+
+### Remote Patterns
+
+```mjs
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'img.clerk.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'jxdujzgweuaphpgoowhu.supabase.co',
+      },
+    ],
+  },
+};
+
+export default nextConfig;
+```
+
+### Create Bucket, Setup Policy and API Keys
+
+```env
+SUPABASE_URL=
+SUPABASE_KEY=
+```
+
+### Setup Supabase
+
+```sh
+npm install @supabase/supabase-js
+```
+
+utils/supabase.ts
+
+```ts
+import { createClient } from '@supabase/supabase-js';
+
+const bucket = 'home-away-draft';
+
+// Create a single supabase client for interacting with your database
+export const supabase = createClient(
+  process.env.SUPABASE_URL as string,
+  process.env.SUPABASE_KEY as string
+);
+
+export const uploadImage = async (image: File) => {
+  const timestamp = Date.now();
+  // const newName = `/users/${timestamp}-${image.name}`;
+  const newName = `${timestamp}-${image.name}`;
+
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .upload(newName, image, {
+      cacheControl: '3600',
+    });
+  if (!data) throw new Error('Image upload failed');
+  return supabase.storage.from(bucket).getPublicUrl(newName).data.publicUrl;
+};
+```
+
+### updateProfileImageAction
+
+```ts
+export const updateProfileImageAction = async (
+  prevState: any,
+  formData: FormData
+): Promise<{ message: string }> => {
+  const user = await getAuthUser();
+  try {
+    const image = formData.get('image') as File;
+    const validatedFields = validateWithZodSchema(updateImageSchema, { image });
+
+    return { message: 'Profile image updated successfully' };
+  } catch (error) {
+    return renderError(error);
+  }
+};
+```
+
+### Remote Patterns
+
+```mjs
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'img.clerk.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'jxdujzgweuaphpgoowhu.supabase.co',
+      },
+    ],
+  },
+};
+
+export default nextConfig;
+```
+
+### Property Model
+
+```prisma
+model Profile {
+  properties      Property[]
+}
+
+model Property {
+  id          String     @id @default(uuid())
+  name        String
+  tagline     String
+  category    String
+  image       String
+  country     String
+  description String
+  price       Int
+  guests      Int
+  bedrooms    Int
+  beds        Int
+  baths       Int
+  amenities   String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  profile     Profile    @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
+  profileId   String
+}
+```
+
+### Property Schema
+
+schemas.ts
+
+```ts
+export const propertySchema = z.object({
+  name: z
+    .string()
+    .min(2, {
+      message: 'name must be at least 2 characters.',
+    })
+    .max(100, {
+      message: 'name must be less than 100 characters.',
+    }),
+  tagline: z
+    .string()
+    .min(2, {
+      message: 'tagline must be at least 2 characters.',
+    })
+    .max(100, {
+      message: 'tagline must be less than 100 characters.',
+    }),
+  price: z.coerce.number().int().min(0, {
+    message: 'price must be a positive number.',
+  }),
+  category: z.string(),
+  description: z.string().refine(
+    (description) => {
+      const wordCount = description.split(' ').length;
+      return wordCount >= 10 && wordCount <= 1000;
+    },
+    {
+      message: 'description must be between 10 and 1000 words.',
+    }
+  ),
+  country: z.string(),
+  image: validateFile(),
+  guests: z.coerce.number().int().min(0, {
+    message: 'guest amount must be a positive number.',
+  }),
+  bedrooms: z.coerce.number().int().min(0, {
+    message: 'bedrooms amount must be a positive number.',
+  }),
+  beds: z.coerce.number().int().min(0, {
+    message: 'beds amount must be a positive number.',
+  }),
+  baths: z.coerce.number().int().min(0, {
+    message: 'bahts amount must be a positive number.',
+  }),
+  amenities: z.string(),
+});
+```
+
+### createPropertyAction
+
+actions.ts
+
+```ts
+export const createPropertyAction = async (
+  prevState: any,
+  formData: FormData
+): Promise<{ message: string }> => {
+  const user = await getAuthUser();
+  try {
+    const rawData = Object.fromEntries(formData);
+    const validatedFields = validateWithZodSchema(propertySchema, rawData);
+  } catch (error) {
+    return renderError(error);
+  }
+  redirect('/');
+};
+```
+
+### Create Rental Page
+
+- app/rentals/create/page.tsx
+
+```tsx
+import FormInput from '@/components/form/FormInput';
+import FormContainer from '@/components/form/FormContainer';
+import { createPropertyAction } from '@/utils/actions';
+import { SubmitButton } from '@/components/form/Buttons';
+
+function CreateProperty() {
+  return (
+    <section>
+      <h1 className='text-2xl font-semibold mb-8 capitalize'>
+        create property
+      </h1>
+      <div className='border p-8 rounded-md'>
+        <h3 className='text-lg mb-4 font-medium'>General Info</h3>
+        <FormContainer action={createPropertyAction}>
+          <div className='grid md:grid-cols-2 gap-8 mb-4'>
+            <FormInput
+              name='name'
+              type='text'
+              label='Name (20 limit)'
+              defaultValue='Cabin in Latvia'
+            />
+            <FormInput
+              name='tagline'
+              type='text '
+              label='Tagline (30 limit)'
+              defaultValue='Dream Getaway Awaits You Here!'
+            />
+            {/* price */}
+            {/* categories */}
+          </div>
+          {/* text area / description */}
+          <SubmitButton text='create rental' className='mt-12' />
+        </FormContainer>
+      </div>
+    </section>
+  );
+}
+export default CreateProperty;
+```
+
+### Price Input
+
+- components/form/PriceInput.tsx
+
+```ts
+import { Label } from '../ui/label';
+import { Input } from '../ui/input';
+import { Prisma } from '@prisma/client';
+
+const name = Prisma.PropertyScalarFieldEnum.price;
+// const name = 'price';
+type FormInputNumberProps = {
+  defaultValue?: number;
+};
+
+function PriceInput({ defaultValue }: FormInputNumberProps) {
+  return (
+    <div className='mb-2'>
+      <Label htmlFor='price' className='capitalize'>
+        Price ($)
+      </Label>
+      <Input
+        id={name}
+        type='number'
+        name={name}
+        min={0}
+        defaultValue={defaultValue || 100}
+        required
+      />
+    </div>
+  );
+}
+export default PriceInput;
+```
+
+```tsx
+/* price */
+<PriceInput />
+```
+
+### Categories Data
+
+- utils/categories.ts
+
+```ts
+import { IconType } from 'react-icons';
+import { MdCabin } from 'react-icons/md';
+
+import { TbCaravan, TbTent, TbBuildingCottage } from 'react-icons/tb';
+
+import { GiWoodCabin, GiMushroomHouse } from 'react-icons/gi';
+import { PiWarehouse, PiLighthouse, PiVan } from 'react-icons/pi';
+
+import { GoContainer } from 'react-icons/go';
+
+type Category = {
+  label: CategoryLabel;
+  icon: IconType;
+};
+
+export type CategoryLabel =
+  | 'cabin'
+  | 'tent'
+  | 'airstream'
+  | 'cottage'
+  | 'container'
+  | 'caravan'
+  | 'tiny'
+  | 'magic '
+  | 'warehouse'
+  | 'lodge';
+
+export const categories: Category[] = [
+  {
+    label: 'cabin',
+    icon: MdCabin,
+  },
+  {
+    label: 'airstream',
+    icon: PiVan,
+  },
+  {
+    label: 'tent',
+    icon: TbTent,
+  },
+  {
+    label: 'warehouse',
+    icon: PiWarehouse,
+  },
+  {
+    label: 'cottage',
+    icon: TbBuildingCottage,
+  },
+  {
+    label: 'magic ',
+    icon: GiMushroomHouse,
+  },
+  {
+    label: 'container',
+    icon: GoContainer,
+  },
+  {
+    label: 'caravan',
+    icon: TbCaravan,
+  },
+
+  {
+    label: 'tiny',
+    icon: PiLighthouse,
+  },
+  {
+    label: 'lodge',
+    icon: GiWoodCabin,
+  },
+];
+```
+
+### Categories Input
+
+```tsx
+import { Label } from '@/components/ui/label';
+import { categories } from '@/utils/categories';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+const name = 'category';
+function CategoriesInput({ defaultValue }: { defaultValue?: string }) {
+  return (
+    <div className='mb-2'>
+      <Label htmlFor={name} className='capitalize'>
+        Categories
+      </Label>
+      <Select
+        defaultValue={defaultValue || categories[0].label}
+        name={name}
+        required
+      >
+        <SelectTrigger id={name}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {categories.map((item) => {
+            return (
+              <SelectItem key={item.label} value={item.label}>
+                <span className='flex items-center gap-2'>
+                  <item.icon /> {item.label}
+                </span>
+              </SelectItem>
+            );
+          })}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+export default CategoriesInput;
+```
+
+```tsx
+/* categories */
+<CategoriesInput />
+```
+
+### TextArea Input
+
+- components/form/TextAreaInput.tsx
+
+```tsx
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+
+type TextAreaInputProps = {
+  name: string;
+  labelText?: string;
+  defaultValue?: string;
+};
+
+function TextAreaInput({ name, labelText, defaultValue }: TextAreaInputProps) {
+  return (
+    <div className='mb-2'>
+      <Label htmlFor={name} className='capitalize'>
+        {labelText || name}
+      </Label>
+      <Textarea
+        id={name}
+        name={name}
+        defaultValue={defaultValue || tempDefaultDescription}
+        rows={5}
+        required
+        className='leading-loose'
+      />
+    </div>
+  );
+}
+
+const tempDefaultDescription =
+  'Glamping Tuscan Style in an Aframe Cabin Tent, nestled in a beautiful olive orchard. AC, heat, Queen Bed, TV, Wi-Fi and an amazing view. Close to Weeki Wachee River State Park, mermaids, manatees, Chassahwitzka River and on the SC Bike Path. Kayaks available for rivers. Bathhouse, fire pit, Kitchenette, fresh eggs. Relax & enjoy fresh country air. No pets please. Ducks, hens and roosters roam the grounds. We have a Pot Cake Rescue from Bimini, Retriever and Pom dog. The space is inspiring and relaxing. Enjoy the beauty of the orchard. Spring trees are in blossom and harvested in Fall. We have a farm store where we sell our farm to table products';
+export default TextAreaInput;
+```
+
+```tsx
+/* text area / description */
+<TextAreaInput name='description' labelText='Description (10 - 1000 Words)' />
+```
+
+### Countries Input
+
+```sh
+npm i world-countries
+```
+
+- utils/countries.ts
+
+```ts
+import countries from 'world-countries';
+
+export const formattedCountries = countries.map((item) => ({
+  code: item.cca2,
+  name: item.name.common,
+  flag: item.flag,
+  location: item.latlng,
+  region: item.region,
+}));
+export const findCountryByCode = (code: string) =>
+  formattedCountries.find((item) => item.code === code);
+```
+
+- components/form/CountriesInput.tsx
+
+```tsx
+import { Label } from '@/components/ui/label';
+import { formattedCountries } from '@/utils/countries';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+const name = 'country';
+function CountriesInput({ defaultValue }: { defaultValue?: string }) {
+  return (
+    <div className='mb-2'>
+      <Label htmlFor={name} className='capitalize'>
+        country
+      </Label>
+      <Select
+        defaultValue={defaultValue || formattedCountries[0].code}
+        name={name}
+        required
+      >
+        <SelectTrigger id={name}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {formattedCountries.map((item) => {
+            return (
+              <SelectItem key={item.code} value={item.code}>
+                <span className='flex items-center gap-2'>
+                  {item.flag} {item.name}
+                </span>
+              </SelectItem>
+            );
+          })}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+export default CountriesInput;
+```
+
+### Accommodation / Counter Input
+
+- components/form/CounterInput.tsx
+
+```tsx
+'use client';
+import { Card, CardHeader } from '@/components/ui/card';
+import { LuMinus, LuPlus } from 'react-icons/lu';
+
+import { Button } from '../ui/button';
+import { useState } from 'react';
+
+function CounterInput({
+  detail,
+  defaultValue,
+}: {
+  detail: string;
+  defaultValue?: number;
+}) {
+  const [count, setCount] = useState(defaultValue || 0);
+  const increaseCount = () => {
+    setCount((prevCount) => prevCount + 1);
+  };
+  const decreaseCount = () => {
+    setCount((prevCount) => {
+      if (prevCount > 0) {
+        return prevCount - 1;
+      }
+      return prevCount;
+    });
+  };
+  return (
+    <Card className='mb-4'>
+      <input type='hidden' name={detail} value={count} />
+      <CardHeader className='flex flex-col gapy-5'>
+        <div className='flex items-center justify-between flex-wrap'>
+          <div className='flex flex-col'>
+            <h2 className='font-medium capitalize'>{detail}</h2>
+            <p className='text-muted-foreground text-sm'>
+              Specify the number of {detail}
+            </p>
+          </div>
+          <div className='flex items-center gap-4'>
+            <Button
+              variant='outline'
+              size='icon'
+              type='button'
+              onClick={decreaseCount}
+            >
+              <LuMinus className='w-5 h-5 text-primary' />
+            </Button>
+            <span className='text-xl font-bold w-5 text-center'>{count}</span>
+            <Button
+              variant='outline'
+              size='icon'
+              type='button'
+              onClick={increaseCount}
+            >
+              <LuPlus className='w-5 h-5 text-primary' />
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+    </Card>
+  );
+}
+
+export default CounterInput;
+```
+
+```tsx
+return <h3 className='text-lg mt-8 mb-4 font-medium'>
+Accommodation Details
+</h3>
+<CounterInput detail='guests' />
+<CounterInput detail='bedrooms' />
+<CounterInput detail='beds' />
+<CounterInput detail='baths' />
 ```

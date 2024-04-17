@@ -1,10 +1,11 @@
 import { Input } from '../ui/input';
+
 function NavSearch() {
   return (
     <Input
-      type='text'
+      type='search'
       placeholder='find a property...'
-      className='max-w-xs dark:bg-muted'
+      className='max-w-xs dark:bg-muted '
     />
   );
 }

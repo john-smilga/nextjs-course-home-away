@@ -1,5 +1,5 @@
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
+import { Label } from '../ui/label';
+import { Input } from '../ui/input';
 
 type FormInputProps = {
   name: string;
@@ -9,8 +9,13 @@ type FormInputProps = {
   placeholder?: string;
 };
 
-function FormInput(props: FormInputProps) {
-  const { label, name, type, defaultValue, placeholder } = props;
+function FormInput({
+  label,
+  name,
+  type,
+  defaultValue,
+  placeholder,
+}: FormInputProps) {
   return (
     <div className='mb-2'>
       <Label htmlFor={name} className='capitalize'>
@@ -27,4 +32,5 @@ function FormInput(props: FormInputProps) {
     </div>
   );
 }
+
 export default FormInput;
