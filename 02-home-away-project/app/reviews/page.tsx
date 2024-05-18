@@ -1,4 +1,4 @@
-function Reviews() {
-  return <h1 className='text-3xl'>Reviews</h1>;
+function ReviewsPage() {
+  return <h1 className='text-3xl'>ReviewsPage</h1>;
 }
-export default Reviews;
+export default ReviewsPage;

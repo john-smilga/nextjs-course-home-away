@@ -41,6 +41,8 @@ export const metadata: Metadata = {
 - rentals
 - reviews
 
+- new file - pageName/page.tsx
+
 ```tsx
 function BookingsPage() {
   return <h1 className='text-3xl'>BookingsPage</h1>;
@@ -83,7 +85,7 @@ export default HomePage;
 ```
 
 ```sh
-npx shadcn-ui@latest add breadcrumb calendar card checkbox dropdown-menu input label popover scroll-area select separator table textarea toast
+npx shadcn-ui@latest add breadcrumb calendar card checkbox dropdown-menu input label popover scroll-area select separator table textarea toast skeleton
 ```
 
 - components
@@ -443,24 +445,24 @@ return (
 
 - create middleware.ts
 
-```tsx
-import { authMiddleware } from '@clerk/nextjs';
+```ts
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
-// See https://clerk.com/docs/references/nextjs/auth-middleware
-// for more information about configuring your Middleware
-export default authMiddleware({
-  // Allow signed out users to access the specified routes:
-  publicRoutes: ['/', '/properties', '/properties/(.*)'],
+const isProtectedRoute = createRouteMatcher([
+  '/bookings(.*)',
+  '/checkout(.*)',
+  '/favorites(.*)',
+  '/profile(.*)',
+  '/rentals(.*)',
+  '/reviews(.*)',
+]);
+
+export default clerkMiddleware((auth, req) => {
+  if (isProtectedRoute(req)) auth().protect();
 });
 
 export const config = {
-  matcher: [
-    // Exclude files with a "." followed by an extension, which are typically static files.
-    // Exclude files in the _next directory, which are Next.js internals.
-    '/((?!.+\\.[\\w]+$|_next).*)',
-    // Re-include any files in the api or trpc folders that might have an extension
-    '/(api|trpc)(.*)',
-  ],
+  matcher: ['/((?!.*\\..*|_next).*)', '/', '/(api|trpc)(.*)'],
 };
 ```
 
@@ -470,6 +472,61 @@ export const config = {
 
 - customization
   - avatars
+
+### Toast Component
+
+[Toast](https://ui.shadcn.com/docs/components/toast)
+
+providers.tsx
+
+```tsx
+'use client';
+import { ThemeProvider } from './theme-provider';
+import { Toaster } from '@/components/ui/toaster';
+
+function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <Toaster />
+      <ThemeProvider
+        attribute='class'
+        defaultTheme='system'
+        enableSystem
+        disableTransitionOnChange
+      >
+        {children}
+      </ThemeProvider>
+    </>
+  );
+}
+export default Providers;
+```
+
+### SignOutLink
+
+- redirectUrl
+
+```tsx
+'use client';
+
+import { SignOutButton } from '@clerk/nextjs';
+import { useToast } from '../ui/use-toast';
+
+function SignOutLink() {
+  const { toast } = useToast();
+  const handleLogout = () => {
+    toast({ description: 'You have been signed out.' });
+  };
+  return (
+    <SignOutButton redirectUrl='/'>
+      <button className='w-full text-left' onClick={handleLogout}>
+        Logout
+      </button>
+    </SignOutButton>
+  );
+}
+export default SignOutLink;
+```
 
 ### LinksDropdown - Complete
 
@@ -517,66 +574,13 @@ return (
 );
 ```
 
-### Toast Component
-
-[Toast](https://ui.shadcn.com/docs/components/toast)
-
-providers.tsx
-
-```tsx
-'use client';
-import { ThemeProvider } from './theme-provider';
-import { Toaster } from '@/components/ui/toaster';
-
-function Providers({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      <Toaster />
-      <ThemeProvider
-        attribute='class'
-        defaultTheme='system'
-        enableSystem
-        disableTransitionOnChange
-      >
-        {children}
-      </ThemeProvider>
-    </>
-  );
-}
-export default Providers;
-```
-
-### SignOutLink
-
-```tsx
-'use client';
-import { SignOutButton } from '@clerk/nextjs';
-import { useToast } from '../ui/use-toast';
-import { useRouter } from 'next/navigation';
-function SignOutLink() {
-  const { toast } = useToast();
-  const router = useRouter();
-  return (
-    <SignOutButton
-      signOutCallback={() => {
-        router.push('/');
-        toast({ description: 'You have been signed out.' });
-      }}
-    >
-      <button className='w-full text-left'>Logout</button>
-    </SignOutButton>
-  );
-}
-export default SignOutLink;
-```
-
 ### Direct User
 
 .env.local
 
 ```bash
-NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/profile/create
-NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/profile/create
+NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/profile/create
+NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/profile/create
 ```
 
 ### Create Profile
@@ -907,13 +911,13 @@ model Profile {
 }
 ```
 
-## CreateProfile Action - Complete
+### CreateProfile Action - Complete
 
 [Clerk User Metadata](https://clerk.com/docs/users/metadata)
 
 ```ts
 import db from './db';
-import { auth, clerkClient, currentUser } from '@clerk/nextjs';
+import { auth, clerkClient, currentUser } from '@clerk/nextjs/server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
@@ -950,7 +954,7 @@ export const createProfileAction = async (
 };
 ```
 
-## FetchProfileImage
+### FetchProfileImage
 
 actions.ts
 
@@ -989,10 +993,11 @@ async function UserIcon() {
 export default UserIcon;
 ```
 
-## Modify Create Profile
+### Modify Create Profile
 
 ```tsx
-import { currentUser } from '@clerk/nextjs';
+import { currentUser } from '@clerk/nextjs/server';
+
 import { redirect } from 'next/navigation';
 async function CreateProfile() {
   const user = await currentUser();
@@ -1001,13 +1006,7 @@ async function CreateProfile() {
 }
 ```
 
-- remove env variable
-
-```env
-NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/profile/create
-```
-
-## Update Profile
+### Update Profile
 
 actions.ts
 
@@ -1121,7 +1120,7 @@ export const updateProfileAction = async (
 };
 ```
 
-## Alternative Error Handling
+### Alternative Error Handling
 
 actions.ts
 
@@ -1200,7 +1199,7 @@ await db.profile.update({
 });
 ```
 
-## ImageInput
+### ImageInput
 
 components/form/ImageInput.tsx
 
@@ -1279,7 +1278,7 @@ import FormContainer from './FormContainer';
 import ImageInput from './ImageInput';
 import { SubmitButton } from './Buttons';
 import { type actionFunction } from '@/utils/types';
-import { User2Icon } from 'lucide-react';
+import { LuUser2 } from 'react-icons/lu';
 
 type ImageInputContainerProps = {
   image: string;
@@ -1294,7 +1293,7 @@ function ImageInputContainer(props: ImageInputContainerProps) {
   const [isUpdateFormVisible, setUpdateFormVisible] = useState(false);
 
   const userIcon = (
-    <User2Icon className='w-24 h-24 bg-primary rounded-md text-white mb-4' />
+    <LuUser2 className='w-24 h-24 bg-primary rounded-md text-white mb-4' />
   );
   return (
     <div>
@@ -1384,12 +1383,12 @@ const nextConfig = {
 export default nextConfig;
 ```
 
-### updateImageSchema
+### imageSchema
 
 schemas.ts
 
 ```ts
-export const updateImageSchema = z.object({
+export const imageSchema = z.object({
   image: validateFile(),
 });
 
@@ -1424,35 +1423,13 @@ export const updateProfileImageAction = async (
   const user = await getAuthUser();
   try {
     const image = formData.get('image') as File;
-    const validatedFields = validateWithZodSchema(updateImageSchema, { image });
+    const validatedFields = validateWithZodSchema(imageSchema, { image });
 
     return { message: 'Profile image updated successfully' };
   } catch (error) {
     return renderError(error);
   }
 };
-```
-
-### Remote Patterns
-
-```mjs
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'img.clerk.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'jxdujzgweuaphpgoowhu.supabase.co',
-      },
-    ],
-  },
-};
-
-export default nextConfig;
 ```
 
 ### Create Bucket, Setup Policy and API Keys
@@ -1502,12 +1479,22 @@ export const uploadImage = async (image: File) => {
 export const updateProfileImageAction = async (
   prevState: any,
   formData: FormData
-): Promise<{ message: string }> => {
+) => {
   const user = await getAuthUser();
   try {
     const image = formData.get('image') as File;
-    const validatedFields = validateWithZodSchema(updateImageSchema, { image });
+    const validatedFields = validateWithZodSchema(imageSchema, { image });
+    const fullPath = await uploadImage(validatedFields.image);
 
+    await db.profile.update({
+      where: {
+        clerkId: user.id,
+      },
+      data: {
+        profileImage: fullPath,
+      },
+    });
+    revalidatePath('/profile');
     return { message: 'Profile image updated successfully' };
   } catch (error) {
     return renderError(error);
@@ -1567,6 +1554,8 @@ model Property {
 
 ### Property Schema
 
+- yes, no image 😜
+
 schemas.ts
 
 ```ts
@@ -1601,7 +1590,6 @@ export const propertySchema = z.object({
     }
   ),
   country: z.string(),
-  image: validateFile(),
   guests: z.coerce.number().int().min(0, {
     message: 'guest amount must be a positive number.',
   }),
@@ -1751,7 +1739,7 @@ export type CategoryLabel =
   | 'container'
   | 'caravan'
   | 'tiny'
-  | 'magic '
+  | 'magic'
   | 'warehouse'
   | 'lodge';
 
@@ -1777,7 +1765,7 @@ export const categories: Category[] = [
     icon: TbBuildingCottage,
   },
   {
-    label: 'magic ',
+    label: 'magic',
     icon: GiMushroomHouse,
   },
   {
@@ -1961,6 +1949,13 @@ function CountriesInput({ defaultValue }: { defaultValue?: string }) {
 export default CountriesInput;
 ```
 
+```tsx
+<div className='grid sm:grid-cols-2 gap-8 mt-4'>
+  <CountriesInput />
+  <ImageInput />
+</div>
+```
+
 ### Accommodation / Counter Input
 
 - components/form/CounterInput.tsx
@@ -2032,11 +2027,1537 @@ export default CounterInput;
 ```
 
 ```tsx
-return <h3 className='text-lg mt-8 mb-4 font-medium'>
-Accommodation Details
-</h3>
-<CounterInput detail='guests' />
-<CounterInput detail='bedrooms' />
-<CounterInput detail='beds' />
-<CounterInput detail='baths' />
+return (
+  <>
+    <h3 className='text-lg mt-8 mb-4 font-medium'>Accommodation Details</h3>
+    <CounterInput detail='guests' />
+    <CounterInput detail='bedrooms' />
+    <CounterInput detail='beds' />
+    <CounterInput detail='baths' />
+  </>
+);
 ```
+
+### Amenities
+
+- utils/amenities.ts
+
+```ts
+import { IconType } from 'react-icons';
+export type Amenity = {
+  name: string;
+  icon: IconType;
+  selected: boolean;
+};
+import {
+  FiCloud,
+  FiTruck,
+  FiZap,
+  FiWind,
+  FiSun,
+  FiCoffee,
+  FiFeather,
+  FiAirplay,
+  FiTrello,
+  FiBox,
+  FiAnchor,
+  FiDroplet,
+  FiMapPin,
+  FiSunrise,
+  FiSunset,
+  FiMusic,
+  FiHeadphones,
+  FiRadio,
+  FiFilm,
+  FiTv,
+} from 'react-icons/fi';
+
+export const amenities: Amenity[] = [
+  { name: 'unlimited cloud storage', icon: FiCloud, selected: false },
+  { name: 'VIP parking for squirrels', icon: FiTruck, selected: false },
+  { name: 'self-lighting fire pit', icon: FiZap, selected: false },
+  {
+    name: 'bbq grill with a masterchef diploma',
+    icon: FiWind,
+    selected: false,
+  },
+  { name: 'outdoor furniture (tree stumps)', icon: FiSun, selected: false },
+  { name: 'private bathroom (bushes nearby)', icon: FiCoffee, selected: false },
+  { name: 'hot shower (sun required)', icon: FiFeather, selected: false },
+  { name: 'kitchenette (aka fire pit)', icon: FiAirplay, selected: false },
+  { name: 'natural heating (bring a coat)', icon: FiTrello, selected: false },
+  {
+    name: 'air conditioning (breeze from the west)',
+    icon: FiBox,
+    selected: false,
+  },
+  { name: 'bed linens (leaves)', icon: FiAnchor, selected: false },
+  { name: 'towels (more leaves)', icon: FiDroplet, selected: false },
+  {
+    name: 'picnic table (yet another tree stump)',
+    icon: FiMapPin,
+    selected: false,
+  },
+  { name: 'hammock (two trees and a rope)', icon: FiSunrise, selected: false },
+  { name: 'solar power (daylight)', icon: FiSunset, selected: false },
+  { name: 'water supply (river a mile away)', icon: FiMusic, selected: false },
+  {
+    name: 'cooking utensils (sticks and stones)',
+    icon: FiHeadphones,
+    selected: false,
+  },
+  { name: 'cool box (hole in the ground)', icon: FiRadio, selected: false },
+  { name: 'lanterns (fireflies)', icon: FiFilm, selected: false },
+  { name: 'first aid kit (hope and prayers)', icon: FiTv, selected: false },
+];
+
+export const conservativeAmenities: Amenity[] = [
+  { name: 'cloud storage', icon: FiCloud, selected: false },
+  { name: 'parking', icon: FiTruck, selected: false },
+  { name: 'fire pit', icon: FiZap, selected: false },
+  { name: 'bbq grill', icon: FiWind, selected: false },
+  { name: 'outdoor furniture', icon: FiSun, selected: false },
+  { name: 'private bathroom', icon: FiCoffee, selected: false },
+  { name: 'hot shower', icon: FiFeather, selected: false },
+  { name: 'kitchenette', icon: FiAirplay, selected: false },
+  { name: 'heating', icon: FiTrello, selected: false },
+  { name: 'air conditioning', icon: FiBox, selected: false },
+  { name: 'bed linens', icon: FiAnchor, selected: false },
+  { name: 'towels', icon: FiDroplet, selected: false },
+  { name: 'picnic table', icon: FiMapPin, selected: false },
+  { name: 'hammock', icon: FiSunrise, selected: false },
+  { name: 'solar power', icon: FiSunset, selected: false },
+  { name: 'water supply', icon: FiMusic, selected: false },
+  { name: 'cooking utensils', icon: FiHeadphones, selected: false },
+  { name: 'cool box', icon: FiRadio, selected: false },
+  { name: 'lanterns', icon: FiFilm, selected: false },
+  { name: 'first aid kit', icon: FiTv, selected: false },
+];
+```
+
+- components/form/AmenitiesInput.tsx
+
+```tsx
+'use client';
+import { useState } from 'react';
+import { amenities, Amenity } from '@/utils/amenities';
+import { Checkbox } from '@/components/ui/checkbox';
+
+function AmenitiesInput({ defaultValue }: { defaultValue?: Amenity[] }) {
+  const [selectedAmenities, setSelectedAmenities] = useState<Amenity[]>(
+    defaultValue || amenities
+  );
+
+  const handleChange = (amenity: Amenity) => {
+    setSelectedAmenities((prev) => {
+      return prev.map((a) => {
+        if (a.name === amenity.name) {
+          return { ...a, selected: !a.selected };
+        }
+        return a;
+      });
+    });
+  };
+
+  return (
+    <section>
+      <input
+        type='hidden'
+        name='amenities'
+        value={JSON.stringify(selectedAmenities)}
+      />
+      <div className='grid grid-cols-2 gap-4'>
+        {selectedAmenities.map((amenity) => (
+          <div key={amenity.name} className='flex items-center space-x-2'>
+            <Checkbox
+              id={amenity.name}
+              checked={amenity.selected}
+              onCheckedChange={() => handleChange(amenity)}
+            />
+            <label
+              htmlFor={amenity.name}
+              className='text-sm font-medium leading-none capitalize flex gap-x-2 items-center'
+            >
+              {amenity.name}
+              <amenity.icon className='w-4 h-4' />
+            </label>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+export default AmenitiesInput;
+```
+
+```tsx
+return (
+  <>
+    <h3 className='text-lg mt-10 mb-6 font-medium'>Amenities</h3>
+    <AmenitiesInput />
+  </>
+);
+```
+
+### createRentalAction
+
+```tsx
+export const createPropertyAction = async (
+  prevState: any,
+  formData: FormData
+): Promise<{ message: string }> => {
+  const user = await getAuthUser();
+  try {
+    const rawData = Object.fromEntries(formData);
+    const file = formData.get('image') as File;
+
+    const validatedFields = validateWithZodSchema(propertySchema, rawData);
+    const validatedFile = validateWithZodSchema(imageSchema, { image: file });
+    const fullPath = await uploadImage(validatedFile.image);
+
+    await db.property.create({
+      data: {
+        ...validatedFields,
+        image: fullPath,
+        profileId: user.id,
+      },
+    });
+  } catch (error) {
+    return renderError(error);
+  }
+  redirect('/');
+};
+```
+
+### fetchProperties
+
+utils/types.ts
+
+```ts
+export type PropertyCardProps = {
+  image: string;
+  id: string;
+  name: string;
+  tagline: string;
+  country: string;
+  price: number;
+};
+```
+
+actions.ts
+
+```ts
+export const fetchProperties = async ({
+  search = '',
+  category,
+}: {
+  search?: string;
+  category?: string;
+}) => {
+  const properties = await db.property.findMany({
+    where: {
+      category,
+      OR: [
+        { name: { contains: search, mode: 'insensitive' } },
+        { tagline: { contains: search, mode: 'insensitive' } },
+      ],
+    },
+    select: {
+      id: true,
+      name: true,
+      tagline: true,
+      country: true,
+      image: true,
+      price: true,
+    },
+  });
+  return properties;
+};
+```
+
+### Home Page
+
+- create in components/home
+  - CategoriesList.tsx
+  - EmptyList.tsx
+  - PropertiesContainer.tsx
+  - PropertiesList.tsx
+
+```tsx
+import CategoriesList from '@/components/home/CategoriesList';
+import PropertiesContainer from '@/components/home/PropertiesContainer';
+
+function HomePage() {
+  return (
+    <section>
+      <CategoriesList />
+      <PropertiesContainer />
+    </section>
+  );
+}
+export default HomePage;
+```
+
+### Search Params
+
+```tsx
+import CategoriesList from '@/components/home/CategoriesList';
+import PropertiesContainer from '@/components/home/PropertiesContainer';
+
+function HomePage({
+  searchParams,
+}: {
+  searchParams: { category?: string; search?: string };
+}) {
+  // console.log(searchParams);
+
+  return (
+    <section>
+      <CategoriesList
+        category={searchParams?.category}
+        search={searchParams?.search}
+      />
+      <PropertiesContainer
+        category={searchParams?.category}
+        search={searchParams?.search}
+      />
+    </section>
+  );
+}
+export default HomePage;
+```
+
+### CategoriesList
+
+```tsx
+import { categories } from '@/utils/categories';
+import { ScrollArea, ScrollBar } from '../ui/scroll-area';
+import Link from 'next/link';
+
+function CategoriesList({
+  category,
+  search,
+}: {
+  category?: string;
+  search?: string;
+}) {
+  const searchTerm = search ? `&search=${search}` : '';
+  return (
+    <section>
+      <ScrollArea className='py-6'>
+        <div className='flex gap-x-4'>
+          {categories.map((item) => {
+            const isActive = item.label === category;
+            return (
+              <Link
+                key={item.label}
+                href={`/?category=${item.label}${searchTerm}`}
+              >
+                <article
+                  className={`p-3 flex flex-col items-center cursor-pointer duration-300  hover:text-primary w-[100px] ${
+                    isActive ? 'text-primary' : ''
+                  }`}
+                >
+                  <item.icon className='w-8 h-8 ' />
+                  <p className='capitalize text-sm mt-1'>{item.label}</p>
+                </article>
+              </Link>
+            );
+          })}
+        </div>
+        <ScrollBar orientation='horizontal' />
+      </ScrollArea>
+    </section>
+  );
+}
+export default CategoriesList;
+```
+
+### EmptyList
+
+```tsx
+import { Button } from '../ui/button';
+import Link from 'next/link';
+
+function EmptyList({
+  heading = 'No items in the list.',
+  message = 'Keep exploring our properties.',
+  btnText = 'back home',
+}: {
+  heading?: string;
+  message?: string;
+  btnText?: string;
+}) {
+  return (
+    <div className='mt-4'>
+      <h2 className='text-xl font-bold '>{heading}</h2>
+      <p className='text-lg'>{message}</p>
+      <Button asChild className='mt-4 capitalize' size='lg'>
+        <Link href='/'>{btnText}</Link>
+      </Button>
+    </div>
+  );
+}
+export default EmptyList;
+```
+
+### PropertiesContainer
+
+```tsx
+import { fetchProperties } from '@/utils/actions';
+import PropertiesList from './PropertiesList';
+import EmptyList from './EmptyList';
+import type { PropertyCardProps } from '@/utils/types';
+
+async function PropertiesContainer({
+  category,
+  search,
+}: {
+  category?: string;
+  search?: string;
+}) {
+  const properties: PropertyCardProps[] = await fetchProperties({
+    category,
+    search,
+  });
+
+  if (properties.length === 0) {
+    return (
+      <EmptyList
+        heading='No results.'
+        message='Try changing or removing some of your filters.'
+        btnText='Clear Filters'
+      />
+    );
+  }
+
+  return <PropertiesList properties={properties} />;
+}
+export default PropertiesContainer;
+```
+
+### Card Components
+
+- components/card
+  - CountryFlagAndName.tsx
+  - FavoriteToggleButton.tsx
+  - FavoriteToggleForm.tsx
+  - LoadingCards.tsx
+  - PropertyCard.tsx
+  - PropertyRating.tsx
+
+### PropertiesList
+
+```tsx
+import PropertyCard from '../card/PropertyCard';
+import type { PropertyCardProps } from '@/utils/types';
+
+function PropertiesList({ properties }: { properties: PropertyCardProps[] }) {
+  return (
+    <section className='mt-4 gap-8 grid sm:grid-cols-2  lg:grid-cols-3  xl:grid-cols-4'>
+      {properties.map((property) => {
+        return <PropertyCard key={property.id} property={property} />;
+      })}
+    </section>
+  );
+}
+export default PropertiesList;
+```
+
+### formatCurrency
+
+- utils/format.ts
+
+```ts
+export const formatCurrency = (amount: number | null) => {
+  const value = amount || 0;
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+};
+```
+
+### PropertyCard
+
+```tsx
+import Image from 'next/image';
+import Link from 'next/link';
+import CountryFlagAndName from './CountryFlagAndName';
+import PropertyRating from './PropertyRating';
+import FavoriteToggleButton from './FavoriteToggleButton';
+import { PropertyCardProps } from '@/utils/types';
+import { formatCurrency } from '@/utils/format';
+
+function PropertyCard({ property }: { property: PropertyCardProps }) {
+  const { name, image, price } = property;
+  const { country, id: propertyId, tagline } = property;
+
+  return (
+    <article className='group relative'>
+      <Link href={`/properties/${propertyId}`}>
+        <div className='relative h-[300px] mb-2 overflow-hidden rounded-md'>
+          <Image
+            src={image}
+            fill
+            sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw'
+            alt={name}
+            className='rounded-md object-cover transform group-hover:scale-110 transition-transform duration-500'
+          />
+        </div>
+        <div className='flex justify-between items-center'>
+          <h3 className='text-sm font-semibold mt-1'>
+            {name.substring(0, 30)}
+          </h3>
+          {/* property rating */}
+        </div>
+        <p className='text-sm mt-1 text-muted-foreground '>
+          {tagline.substring(0, 40)}
+        </p>
+        <div className='flex justify-between items-center mt-1'>
+          <p className='text-sm mt-1 '>
+            <span className='font-semibold'>{formatCurrency(price)} </span>
+            night
+          </p>
+          {/* country and flag */}
+        </div>
+      </Link>
+      <div className='absolute top-5 right-5 z-5'>
+        {/* favorite toggle button */}
+      </div>
+    </article>
+  );
+}
+export default PropertyCard;
+```
+
+### Property Rating
+
+```tsx
+import { FaStar } from 'react-icons/fa';
+
+async function PropertyRating({
+  propertyId,
+  inPage,
+}: {
+  propertyId: string;
+  inPage: boolean;
+}) {
+  // temp
+  const rating = 4.7;
+  const count = 100;
+
+  const className = `flex gap-1 items-center ${inPage ? 'text-md' : 'text-xs'}`;
+  const countText = count > 1 ? 'reviews' : 'review';
+  const countValue = `(${count}) ${inPage ? countText : ''}`;
+  return (
+    <span className={className}>
+      <FaStar className='w-3 h-3' />
+      {rating} {countValue}
+    </span>
+  );
+}
+
+export default PropertyRating;
+```
+
+```tsx
+<PropertyRating inPage={false} propertyId={propertyId} />
+```
+
+### FavoriteToggleButton
+
+```tsx
+import { FaHeart } from 'react-icons/fa';
+import { Button } from '@/components/ui/button';
+function FavoriteToggleButton({ propertyId }: { propertyId: string }) {
+  return (
+    <Button size='icon' variant='outline' className='p-2 cursor-pointer'>
+      <FaHeart />
+    </Button>
+  );
+}
+export default FavoriteToggleButton;
+```
+
+```tsx
+<div className='absolute top-5 right-5 z-5'>
+  <FavoriteToggleButton propertyId={propertyId} />
+</div>
+```
+
+### CountryFlagAndName
+
+```tsx
+import { findCountryByCode } from '@/utils/countries';
+
+function CountryFlagAndName({ countryCode }: { countryCode: string }) {
+  const validCountry = findCountryByCode(countryCode);
+  const countryName =
+    validCountry!.name.length > 20
+      ? `${validCountry!.name.substring(0, 20)}...`
+      : validCountry!.name;
+  return (
+    <span className='flex justify-between items-center gap-2 text-sm '>
+      {validCountry?.flag} {countryName}
+    </span>
+  );
+}
+export default CountryFlagAndName;
+```
+
+```tsx
+<CountryFlagAndName countryCode={country} />
+```
+
+### Suspense
+
+- app/loading.tsx - always an option
+
+components/card/LoadingCards.tsx
+
+```tsx
+import { Skeleton } from '@/components/ui/skeleton';
+
+function LoadingCards() {
+  return (
+    <section className='mt-4 gap-8 grid sm:grid-cols-2  lg:grid-cols-3  xl:grid-cols-4'>
+      <SkeletonCard />
+      <SkeletonCard />
+      <SkeletonCard />
+      <SkeletonCard />
+    </section>
+  );
+}
+export default LoadingCards;
+
+export function SkeletonCard() {
+  return (
+    <div>
+      <Skeleton className='h-[300px] rounded-md' />
+      <Skeleton className='h-4 mt-2 w-3/4' />
+      <Skeleton className='h-4 mt-2 w-1/2' />
+    </div>
+  );
+}
+```
+
+app/page.tsx
+
+- navigate to a different page, refresh and then navigate back to home page
+- make sure you fetch in component not page
+
+```tsx
+import CategoriesList from '@/components/home/CategoriesList';
+import PropertiesContainer from '@/components/home/PropertiesContainer';
+import LoadingCards from '@/components/card/LoadingCards';
+import { Suspense } from 'react';
+function HomePage({
+  searchParams,
+}: {
+  searchParams: { category?: string; search?: string };
+}) {
+  return (
+    <section>
+      <CategoriesList
+        category={searchParams?.category}
+        search={searchParams?.search}
+      />
+      <Suspense fallback={<LoadingCards />}>
+        <PropertiesContainer
+          category={searchParams?.category}
+          search={searchParams?.search}
+        />
+      </Suspense>
+    </section>
+  );
+}
+export default HomePage;
+```
+
+### SearchInput
+
+```sh
+npm i use-debounce
+```
+
+components/navbar/NavSearch.tsx
+
+```tsx
+'use client';
+import { Input } from '../ui/input';
+import { useSearchParams, usePathname, useRouter } from 'next/navigation';
+import { useDebouncedCallback } from 'use-debounce';
+import { useState, useEffect } from 'react';
+
+function NavSearch() {
+  const searchParams = useSearchParams();
+
+  const pathname = usePathname();
+  const { replace } = useRouter();
+  const [search, setSearch] = useState(
+    searchParams.get('search')?.toString() || ''
+  );
+  const handleSearch = useDebouncedCallback((value: string) => {
+    const params = new URLSearchParams(searchParams);
+    if (value) {
+      params.set('search', value);
+    } else {
+      params.delete('search');
+    }
+    replace(`${pathname}?${params.toString()}`);
+  }, 300);
+  useEffect(() => {
+    if (!searchParams.get('search')) {
+      setSearch('');
+    }
+  }, [searchParams.get('search')]);
+  return (
+    <Input
+      type='search'
+      placeholder='find a property...'
+      className='max-w-xs dark:bg-muted '
+      onChange={(e) => {
+        setSearch(e.target.value);
+        handleSearch(e.target.value);
+      }}
+      value={search}
+    />
+  );
+}
+export default NavSearch;
+```
+
+### Favorites Model
+
+```prisma
+
+model Profile {
+favorites    Favorite[]
+}
+
+model Property {
+favorites    Favorite[]
+}
+
+model Favorite {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile   Profile  @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
+  profileId String
+
+  property   Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  propertyId String
+
+}
+```
+
+```sh
+npx prisma db push
+```
+
+### CardSignInButton
+
+components/form/Buttons.tsx
+
+```tsx
+import { SignInButton } from '@clerk/nextjs';
+import { FaRegHeart, FaHeart } from 'react-icons/fa';
+
+export const CardSignInButton = () => {
+  return (
+    <SignInButton mode='modal'>
+      <Button
+        type='button'
+        size='icon'
+        variant='outline'
+        className='p-2 cursor-pointer'
+        asChild
+      >
+        <FaRegHeart />
+      </Button>
+    </SignInButton>
+  );
+};
+```
+
+components/card/FavoriteToggleButton.tsx
+
+```tsx
+import { FaHeart } from 'react-icons/fa';
+import { Button } from '@/components/ui/button';
+import { auth } from '@clerk/nextjs/server';
+import { CardSignInButton } from '../form/Buttons';
+function FavoriteToggleButton({ propertyId }: { propertyId: string }) {
+  const { userId } = auth();
+  if (!userId) return <CardSignInButton />;
+  return (
+    <Button size='icon' variant='outline' className='p-2 cursor-pointer'>
+      <FaHeart />
+    </Button>
+  );
+}
+export default FavoriteToggleButton;
+```
+
+### fetchFavorite
+
+actions.ts
+
+```ts
+export const fetchFavoriteId = async ({
+  propertyId,
+}: {
+  propertyId: string;
+}) => {
+  const user = await getAuthUser();
+  const favorite = await db.favorite.findFirst({
+    where: {
+      propertyId,
+      profileId: user.id,
+    },
+    select: {
+      id: true,
+    },
+  });
+  return favorite?.id || null;
+};
+export const toggleFavoriteAction = async () => {
+  return { message: 'toggle favorite' };
+};
+```
+
+### FavoriteToggleButton - Complete
+
+```tsx
+import { auth } from '@clerk/nextjs/server';
+import { CardSignInButton } from '../form/Buttons';
+import { fetchFavoriteId } from '@/utils/actions';
+import FavoriteToggleForm from './FavoriteToggleForm';
+async function FavoriteToggleButton({ propertyId }: { propertyId: string }) {
+  const { userId } = auth();
+  if (!userId) return <CardSignInButton />;
+  const favoriteId = await fetchFavoriteId({ propertyId });
+
+  return <FavoriteToggleForm favoriteId={favoriteId} propertyId={propertyId} />;
+}
+export default FavoriteToggleButton;
+```
+
+### CardSubmitButton
+
+components/form/Buttons.tsx
+
+```tsx
+export const CardSubmitButton = ({ isFavorite }: { isFavorite: boolean }) => {
+  const { pending } = useFormStatus();
+  return (
+    <Button
+      type='submit'
+      size='icon'
+      variant='outline'
+      className=' p-2 cursor-pointer'
+    >
+      {pending ? (
+        <ReloadIcon className=' animate-spin' />
+      ) : isFavorite ? (
+        <FaHeart />
+      ) : (
+        <FaRegHeart />
+      )}
+    </Button>
+  );
+};
+```
+
+### FavoriteToggleForm
+
+```tsx
+'use client';
+
+import { usePathname } from 'next/navigation';
+import FormContainer from '../form/FormContainer';
+import { toggleFavoriteAction } from '@/utils/actions';
+import { CardSubmitButton } from '../form/Buttons';
+
+type FavoriteToggleFormProps = {
+  propertyId: string;
+  favoriteId: string | null;
+};
+
+function FavoriteToggleForm({
+  propertyId,
+  favoriteId,
+}: FavoriteToggleFormProps) {
+  const pathname = usePathname();
+  const toggleAction = toggleFavoriteAction.bind(null, {
+    propertyId,
+    favoriteId,
+    pathname,
+  });
+  return (
+    <FormContainer action={toggleAction}>
+      <CardSubmitButton isFavorite={favoriteId ? true : false} />
+    </FormContainer>
+  );
+}
+export default FavoriteToggleForm;
+```
+
+### toggleFavoriteAction
+
+actions.ts
+
+```ts
+export const toggleFavoriteAction = async (prevState: {
+  propertyId: string;
+  favoriteId: string | null;
+  pathname: string;
+}) => {
+  const user = await getAuthUser();
+  const { propertyId, favoriteId, pathname } = prevState;
+  try {
+    if (favoriteId) {
+      await db.favorite.delete({
+        where: {
+          id: favoriteId,
+        },
+      });
+    } else {
+      await db.favorite.create({
+        data: {
+          propertyId,
+          profileId: user.id,
+        },
+      });
+    }
+    revalidatePath(pathname);
+    return { message: favoriteId ? 'Removed from Faves' : 'Added to Faves' };
+  } catch (error) {
+    return renderError(error);
+  }
+};
+```
+
+### fetchFavorites
+
+actions.ts
+
+```ts
+export const fetchFavorites = async () => {
+  const user = await getAuthUser();
+  const favorites = await db.favorite.findMany({
+    where: {
+      profileId: user.id,
+    },
+    select: {
+      property: {
+        select: {
+          id: true,
+          name: true,
+          tagline: true,
+          price: true,
+          country: true,
+          image: true,
+        },
+      },
+    },
+  });
+  return favorites.map((favorite) => favorite.property);
+};
+```
+
+### Favorites Page
+
+- favorites/loading.tsx
+
+```tsx
+'use client';
+import LoadingCards from '@/components/card/LoadingCards';
+
+function loading() {
+  return <LoadingCards />;
+}
+export default loading;
+```
+
+- favorites/page.tsx
+
+```tsx
+import EmptyList from '@/components/home/EmptyList';
+import PropertiesList from '@/components/home/PropertiesList';
+import { fetchFavorites } from '@/utils/actions';
+
+async function FavoritesPage() {
+  const favorites = await fetchFavorites();
+
+  if (favorites.length === 0) {
+    return <EmptyList />;
+  }
+
+  return <PropertiesList properties={favorites} />;
+}
+export default FavoritesPage;
+```
+
+### fetchPropertyDetails
+
+```ts
+export const fetchPropertyDetails = (id: string) => {
+  return db.property.findUnique({
+    where: {
+      id,
+    },
+    include: {
+      profile: true,
+    },
+  });
+};
+```
+
+- properties/[id]/loading.tsx
+
+```ts
+'use client';
+
+import { Skeleton } from '@/components/ui/skeleton';
+function loading() {
+  return <Skeleton className='h-[300px] md:h-[500px] w-full rounded' />;
+}
+
+export default loading;
+```
+
+- properties/[id]/page.tsx
+
+```tsx
+import { fetchPropertyDetails } from '@/utils/actions';
+import { redirect } from 'next/navigation';
+
+async function PropertyDetailsPage({ params }: { params: { id: string } }) {
+  const property = await fetchPropertyDetails(params.id);
+  if (!property) redirect('/');
+  const { baths, bedrooms, beds, guests } = property;
+  const details = { baths, bedrooms, beds, guests };
+  return <div>PropertyDetailsPage</div>;
+}
+export default PropertyDetailsPage;
+```
+
+### BreadCrumbs
+
+- components/properties/BreadCrumbs.tsx
+
+```tsx
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
+
+function BreadCrumbs({ name }: { name: string }) {
+  return (
+    <Breadcrumb>
+      <BreadcrumbList>
+        <BreadcrumbItem>
+          <BreadcrumbLink href='/'>Home</BreadcrumbLink>
+        </BreadcrumbItem>
+        <BreadcrumbSeparator />
+        <BreadcrumbItem>
+          <BreadcrumbPage>{name}</BreadcrumbPage>
+        </BreadcrumbItem>
+      </BreadcrumbList>
+    </Breadcrumb>
+  );
+}
+export default BreadCrumbs;
+```
+
+- properties/[id]/page.tsx
+
+```tsx
+return (
+  <section>
+    <BreadCrumbs name={property.name} />
+    <header className='flex justify-between items-center mt-4'>
+      <h1 className='text-4xl font-bold '>{property.tagline}</h1>
+      <div className='flex items-center gap-x-4'>
+        {/* share button */}
+        <FavoriteToggleButton propertyId={property.id} />
+      </div>
+    </header>
+  </section>
+);
+```
+
+### ShareButton
+
+[React Share](https://www.npmjs.com/package/react-share)
+
+```sh
+npm i react-share
+```
+
+- components/properties/ShareButton.tsx
+
+```tsx
+'use client';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Button } from '../ui/button';
+import { LuShare2 } from 'react-icons/lu';
+
+import {
+  TwitterShareButton,
+  EmailShareButton,
+  LinkedinShareButton,
+  TwitterIcon,
+  EmailIcon,
+  LinkedinIcon,
+} from 'react-share';
+
+function ShareButton({
+  propertyId,
+  name,
+}: {
+  propertyId: string;
+  name: string;
+}) {
+  const url = process.env.NEXT_PUBLIC_WEBSITE_URL;
+  const shareLink = `${url}/properties/${propertyId}`;
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant='outline' size='icon' className='p-2'>
+          <LuShare2 />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        side='top'
+        align='end'
+        sideOffset={10}
+        className='flex items-center gap-x-2 justify-center w-full'
+      >
+        <TwitterShareButton url={shareLink} title={name}>
+          <TwitterIcon size={32} round />
+        </TwitterShareButton>
+        <LinkedinShareButton url={shareLink} title={name}>
+          <LinkedinIcon size={32} round />
+        </LinkedinShareButton>
+        <EmailShareButton url={shareLink} subject={name}>
+          <EmailIcon size={32} round />
+        </EmailShareButton>
+      </PopoverContent>
+    </Popover>
+  );
+}
+export default ShareButton;
+```
+
+- properties/[id]/page.tsx
+
+```tsx
+return (
+  <div className='flex items-center gap-x-4'>
+    <ShareButton name={property.name} propertyId={property.id} />
+    <FavoriteToggleButton propertyId={property.id} />
+  </div>
+);
+```
+
+### ImageContainer
+
+- components/properties/ImageContainer.tsx
+
+```tsx
+import Image from 'next/image';
+
+function ImageContainer({
+  mainImage,
+  name,
+}: {
+  mainImage: string;
+  name: string;
+}) {
+  return (
+    <section className='h-[300px] md:h-[500px] relative mt-8'>
+      <Image
+        src={mainImage}
+        fill
+        sizes='100vw'
+        alt={name}
+        className='object-cover  rounded-md'
+        priority
+      />
+    </section>
+  );
+}
+export default ImageContainer;
+```
+
+- properties/[id]/page.tsx
+
+```tsx
+<ImageContainer mainImage={property.image} name={property.name} />
+```
+
+### Col Layout
+
+- properties/[id]/page.tsx
+
+```tsx
+return (
+  <section className='lg:grid lg:grid-cols-12 gap-x-12 mt-12'>
+    <div className='lg:col-span-8'>
+      <div className='flex gap-x-4 items-center'>
+        <h1 className='text-xl font-bold'>{property.name}</h1>
+        <PropertyRating inPage propertyId={property.id} />
+      </div>
+    </div>
+    <div className='lg:col-span-4 flex flex-col items-center'>
+      {/* calendar */}
+    </div>
+  </section>
+);
+```
+
+### Calendar - Initial Setup
+
+- components/properties/booking/BookingCalendar.tsx
+
+```tsx
+'use client';
+import { useState } from 'react';
+import { Calendar } from '@/components/ui/calendar';
+import { DateRange } from 'react-day-picker';
+
+export default function App() {
+  const currentDate = new Date();
+  const defaultSelected: DateRange = {
+    from: undefined,
+    to: undefined,
+  };
+  const [range, setRange] = useState<DateRange | undefined>(defaultSelected);
+
+  return (
+    <Calendar
+      id='test'
+      mode='range'
+      defaultMonth={currentDate}
+      selected={range}
+      onSelect={setRange}
+    />
+  );
+}
+```
+
+- properties/[id]/page.tsx
+
+```tsx
+<div className='lg:col-span-4 flex flex-col items-center'>
+  {/* calendar */}
+  <BookingCalendar />
+</div>
+```
+
+### PropertyDetails
+
+- utils/format.ts
+
+```ts
+export function formatQuantity(quantity: number, noun: string): string {
+  return quantity === 1 ? `${quantity} ${noun}` : `${quantity} ${noun}s`;
+}
+```
+
+- components/properties/PropertyDetails.tsx
+
+```tsx
+import { formatQuantity } from '@/utils/format';
+
+type PropertyDetailsProps = {
+  details: {
+    bedrooms: number;
+    baths: number;
+    guests: number;
+    beds: number;
+  };
+};
+
+function PropertyDetails({
+  details: { bedrooms, baths, guests, beds },
+}: PropertyDetailsProps) {
+  return (
+    <p className='text-md font-light '>
+      <span>{formatQuantity(bedrooms, 'bedroom')} &middot; </span>
+      <span>{formatQuantity(baths, 'bath')} &middot; </span>
+      <span>{formatQuantity(guests, 'guest')} &middot; </span>
+      <span>{formatQuantity(beds, 'bed')}</span>
+    </p>
+  );
+}
+export default PropertyDetails;
+```
+
+- properties/[id]/page.tsx
+
+```tsx
+<PropertyDetails details={details} />
+```
+
+### UserInfo
+
+- components/properties/UserInfo.tsx
+
+```tsx
+import Image from 'next/image';
+
+type UserInfoProps = {
+  profile: {
+    profileImage: string;
+    firstName: string;
+  };
+};
+
+function UserInfo({ profile: { profileImage, firstName } }: UserInfoProps) {
+  return (
+    <article className='grid grid-cols-[auto,1fr] gap-4 mt-4'>
+      <Image
+        src={profileImage}
+        alt={firstName}
+        width={50}
+        height={50}
+        className='rounded-md w-12 h-12 object-cover'
+      />
+      <div>
+        <p>
+          Hosted by
+          <span className='font-bold'> {firstName}</span>
+        </p>
+        <p className='text-muted-foreground font-light'>
+          Superhost &middot; 2 years hosting
+        </p>
+      </div>
+    </article>
+  );
+}
+export default UserInfo;
+```
+
+- properties/[id]/page.tsx
+
+```tsx
+const firstName = property.profile.firstName;
+const profileImage = property.profile.profileImage;
+
+<UserInfo profile={{ firstName, profileImage }} />;
+```
+
+### Description
+
+- components/properties/Title.tsx
+
+```tsx
+function Title({ text }: { text: string }) {
+  return <h3 className='text-lg font-bold  mb-2'>{text}</h3>;
+}
+export default Title;
+```
+
+- components/properties/Description.tsx
+
+```tsx
+'use client';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import Title from './Title';
+const Description = ({ description }: { description: string }) => {
+  const [isFullDescriptionShown, setIsFullDescriptionShown] = useState(false);
+  const words = description.split(' ');
+  const isLongDescription = words.length > 100;
+
+  const toggleDescription = () => {
+    setIsFullDescriptionShown(!isFullDescriptionShown);
+  };
+
+  const displayedDescription =
+    isLongDescription && !isFullDescriptionShown
+      ? words.slice(0, 100).join(' ') + '...'
+      : description;
+
+  return (
+    <article className='mt-4'>
+      <Title text='Description' />
+      <p className='text-muted-foreground font-light leading-loose'>
+        {displayedDescription}
+      </p>
+      {isLongDescription && (
+        <Button variant='link' className='pl-0' onClick={toggleDescription}>
+          {isFullDescriptionShown ? 'Show less' : 'Show more'}
+        </Button>
+      )}
+    </article>
+  );
+};
+
+export default Description;
+```
+
+- properties/[id]/page.tsx
+
+```tsx
+<Separator className='mt-4' />
+<Description description={property.description} />
+```
+
+### Amenities
+
+- components/properties/Amenities.tsx
+
+```tsx
+import { Amenity } from '@/utils/amenities';
+import { LuFolderCheck } from 'react-icons/lu';
+import Title from './Title';
+
+function Amenities({ amenities }: { amenities: string }) {
+  const amenitiesList: Amenity[] = JSON.parse(amenities as string);
+  const noAmenities = amenitiesList.every((amenity) => !amenity.selected);
+
+  if (noAmenities) {
+    return null;
+  }
+  return (
+    <div className='mt-4'>
+      <Title text='What this place offers' />
+      <div className='grid md:grid-cols-2 gap-x-4'>
+        {amenitiesList.map((amenity) => {
+          if (!amenity.selected) {
+            return null;
+          }
+          return (
+            <div key={amenity.name} className='flex items-center gap-x-4 mb-2 '>
+              <LuFolderCheck className='h-6 w-6 text-primary' />
+              <span className='font-light text-sm capitalize'>
+                {amenity.name}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+export default Amenities;
+```
+
+- properties/[id]/page.tsx
+
+```tsx
+<Amenities amenities={property.amenities} />
+```
+
+### PropertyMap
+
+[React Leaflet](https://react-leaflet.js.org/)
+
+Leaflet makes direct calls to the DOM when it is loaded, therefore React Leaflet is not compatible with server-side rendering.
+
+```sh
+npm install react react-dom leaflet react-leaflet
+```
+
+```sh
+npm install -D @types/leaflet
+```
+
+- components/properties/PropertyMap.tsx
+
+```tsx
+'use client';
+import { MapContainer, TileLayer, Marker, ZoomControl } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import { icon } from 'leaflet';
+const iconUrl =
+  'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon-2x.png';
+const markerIcon = icon({
+  iconUrl: iconUrl,
+  iconSize: [20, 30],
+});
+
+import { findCountryByCode } from '@/utils/countries';
+import CountryFlagAndName from '../card/CountryFlagAndName';
+import Title from './Title';
+
+function PropertyMap({ countryCode }: { countryCode: string }) {
+  const defaultLocation = [51.505, -0.09] as [number, number];
+  const location = findCountryByCode(countryCode)?.location as [number, number];
+
+  return (
+    <div className='mt-4'>
+      <div className='mb-4 '>
+        <Title text='Where you will be staying' />
+        <CountryFlagAndName countryCode={countryCode} />
+      </div>
+      <MapContainer
+        scrollWheelZoom={false}
+        zoomControl={false}
+        className='h-[50vh] rounded-lg relative z-0'
+        center={location || defaultLocation}
+        zoom={7}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+        />
+        <ZoomControl position='bottomright' />
+        <Marker
+          position={location || defaultLocation}
+          icon={markerIcon}
+        ></Marker>
+      </MapContainer>
+    </div>
+  );
+}
+export default PropertyMap;
+```
+
+- properties/[id]/page.tsx
+
+```tsx
+const DynamicMap = dynamic(
+  () => import('@/components/properties/PropertyMap'),
+  {
+    ssr: false,
+    loading: () => <Skeleton className='h-[400px] w-full' />,
+  }
+);
+return <DynamicMap countryCode={property.country} />;
+```
+
+Lazy Loading: Components wrapped with dynamic are lazy loaded. This means that the component code is not loaded until it is needed. For example, if you have a component that is only visible when a user clicks a button, you could use dynamic to ensure that the code for that component is not loaded until the button is clicked.
+
+Server Side Rendering (SSR) Control: By default, Next.js pre-renders every page. This means that it generates HTML for each page in advance, instead of doing it all on the client-side. However, with dynamic, you can control this behavior. You can choose to disable SSR for specific modules, which can be useful for modules that have client-side dependencies.
+
+### Deploy
+
+```json
+"scripts": {
+    "dev": "next dev",
+    "build": "npx prisma generate && next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+```
+
+- refactor NavSearch Component

@@ -1,18 +1,19 @@
 'use client';
+
 import { SignOutButton } from '@clerk/nextjs';
 import { useToast } from '../ui/use-toast';
-import { useRouter } from 'next/navigation';
+
 function SignOutLink() {
   const { toast } = useToast();
-  const router = useRouter();
+  const handleLogout = () => {
+    toast({ description: 'You have been signed out.' });
+  };
+
   return (
-    <SignOutButton
-      signOutCallback={() => {
-        router.push('/');
-        toast({ description: 'You have been signed out.' });
-      }}
-    >
-      <button className='w-full text-left'>Logout</button>
+    <SignOutButton redirectUrl='/'>
+      <button className='w-full text-left' onClick={handleLogout}>
+        Logout
+      </button>
     </SignOutButton>
   );
 }

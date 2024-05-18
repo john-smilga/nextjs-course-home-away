@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/select';
 
 const name = 'category';
+
 function CategoriesInput({ defaultValue }: { defaultValue?: string }) {
   return (
     <div className='mb-2'>

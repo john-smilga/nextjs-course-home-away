@@ -3,15 +3,15 @@ import { ZodSchema } from 'zod';
 
 export const profileSchema = z.object({
   // firstName: z.string().max(5, { message: 'max length is 5' }),
-  firstName: z
-    .string()
-    .min(2, { message: 'first name must be at least 2 characters' }),
-  lastName: z
-    .string()
-    .min(2, { message: 'last name must be at least 2 characters' }),
-  username: z
-    .string()
-    .min(2, { message: 'username must be at least 2 characters' }),
+  firstName: z.string().min(2, {
+    message: 'first name must be at least 2 characters',
+  }),
+  lastName: z.string().min(2, {
+    message: 'last name must be at least 2 characters',
+  }),
+  username: z.string().min(2, {
+    message: 'username must be at least 2 characters',
+  }),
 });
 
 export function validateWithZodSchema<T>(
@@ -19,28 +19,29 @@ export function validateWithZodSchema<T>(
   data: unknown
 ): T {
   const result = schema.safeParse(data);
+
   if (!result.success) {
     const errors = result.error.errors.map((error) => error.message);
-    throw new Error(errors.join(', '));
+    throw new Error(errors.join(','));
   }
   return result.data;
 }
 
-export const updateImageSchema = z.object({
+export const imageSchema = z.object({
   image: validateFile(),
 });
 
 function validateFile() {
   const maxUploadSize = 1024 * 1024;
-  const acceptedFileTypes = ['image/'];
+  const acceptedFilesTypes = ['image/'];
   return z
     .instanceof(File)
     .refine((file) => {
       return !file || file.size <= maxUploadSize;
-    }, `File size must be less than 1 MB`)
+    }, 'File size must be less than 1 MB')
     .refine((file) => {
       return (
-        !file || acceptedFileTypes.some((type) => file.type.startsWith(type))
+        !file || acceptedFilesTypes.some((type) => file.type.startsWith(type))
       );
     }, 'File must be an image');
 }
@@ -76,7 +77,6 @@ export const propertySchema = z.object({
     }
   ),
   country: z.string(),
-  image: validateFile(),
   guests: z.coerce.number().int().min(0, {
     message: 'guest amount must be a positive number.',
   }),

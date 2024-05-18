@@ -1,15 +1,7 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
-
-
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  directUrl         = env("DIRECT_URL")
 }
 
 generator client {
@@ -26,10 +18,8 @@ model Profile {
   profileImage String
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
-  properties      Property[]
-  favorites     Favorite[]
-  bookings     Booking[]
-  reviews      Review[]
+  properties Property[]
+  favorites Favorite[]
 }
 
 model Property {
@@ -50,52 +40,19 @@ model Property {
   updatedAt   DateTime   @updatedAt
   profile     Profile    @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
   profileId   String
-  favorites    Favorite[]
-  bookings    Booking[]
-  reviews     Review[]
-  images      PropertyImage[]
+  favorites Favorite[]
 }
+
 
 model Favorite {
   id        String   @id @default(uuid())
-  profile   Profile  @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
-  profileId String
-  property   Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  propertyId String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
 
-model Booking {
-  id        String   @id @default(uuid())
   profile   Profile  @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
   profileId String
-  property   Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  propertyId String
-  orderTotal     Int
-  totalNights    Int
-  checkIn   DateTime
-  checkOut  DateTime
-  paymentStatus Boolean @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
 
-model Review {
-  id        String   @id @default(uuid())
-  profile   Profile  @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
-  profileId String
   property   Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   propertyId String
-  rating    Int
-  comment   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
 
-model PropertyImage {
-  id         String      @id @default(uuid())
-  url        String
-  property   Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  propertyId String
 }

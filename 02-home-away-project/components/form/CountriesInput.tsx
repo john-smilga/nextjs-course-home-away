@@ -9,12 +9,14 @@ import {
 } from '@/components/ui/select';
 
 const name = 'country';
+
 function CountriesInput({ defaultValue }: { defaultValue?: string }) {
   return (
     <div className='mb-2'>
       <Label htmlFor={name} className='capitalize'>
         country
       </Label>
+
       <Select
         defaultValue={defaultValue || formattedCountries[0].code}
         name={name}

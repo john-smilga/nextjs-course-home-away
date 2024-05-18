@@ -13,9 +13,11 @@ function CounterInput({
   defaultValue?: number;
 }) {
   const [count, setCount] = useState(defaultValue || 0);
+
   const increaseCount = () => {
     setCount((prevCount) => prevCount + 1);
   };
+
   const decreaseCount = () => {
     setCount((prevCount) => {
       if (prevCount > 0) {
@@ -24,10 +26,12 @@ function CounterInput({
       return prevCount;
     });
   };
+
   return (
     <Card className='mb-4'>
+      {/* input */}
       <input type='hidden' name={detail} value={count} />
-      <CardHeader className='flex flex-col gapy-5'>
+      <CardHeader className='flex flex-col gap-y-5'>
         <div className='flex items-center justify-between flex-wrap'>
           <div className='flex flex-col'>
             <h2 className='font-medium capitalize'>{detail}</h2>
@@ -59,5 +63,4 @@ function CounterInput({
     </Card>
   );
 }
-
 export default CounterInput;

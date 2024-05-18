@@ -21,7 +21,7 @@ export type CategoryLabel =
   | 'container'
   | 'caravan'
   | 'tiny'
-  | 'magic '
+  | 'magic'
   | 'warehouse'
   | 'lodge';
 
@@ -47,7 +47,7 @@ export const categories: Category[] = [
     icon: TbBuildingCottage,
   },
   {
-    label: 'magic ',
+    label: 'magic',
     icon: GiMushroomHouse,
   },
   {

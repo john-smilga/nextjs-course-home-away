@@ -7,15 +7,13 @@ import {
 import FormInput from '@/components/form/FormInput';
 import { SubmitButton } from '@/components/form/Buttons';
 import ImageInputContainer from '@/components/form/ImageInputContainer';
-
 async function ProfilePage() {
   const profile = await fetchProfile();
 
   return (
     <section>
       <h1 className='text-2xl font-semibold mb-8 capitalize'>user profile</h1>
-      <div className='border p-8 rounded-md'>
-        {/* image input container */}
+      <div className='border p-8 rounded-md '>
         <ImageInputContainer
           image={profile.profileImage}
           name={profile.username}
@@ -23,7 +21,7 @@ async function ProfilePage() {
           text='Update Profile Image'
         />
         <FormContainer action={updateProfileAction}>
-          <div className='grid gap-4 md:grid-cols-2 mt-4 '>
+          <div className='grid md:grid-cols-2 gap-4 mt-4'>
             <FormInput
               type='text'
               name='firstName'
@@ -43,7 +41,7 @@ async function ProfilePage() {
               defaultValue={profile.username}
             />
           </div>
-          <SubmitButton text='Update Profile' className='mt-8' />
+          <SubmitButton text='update profile' className='mt-8' />
         </FormContainer>
       </div>
     </section>
