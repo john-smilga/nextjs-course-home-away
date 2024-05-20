@@ -3237,7 +3237,9 @@ Server Side Rendering (SSR) Control: By default, Next.js pre-renders every page.
 },
 ```
 - refactor NavSearch Component
-![HomeAway Diagram](undefined "HomeAway Diagram")
+
+
+![HomeAway Partial Diagram](undefined "HomeAway Partial Diagram")
 
 
 
