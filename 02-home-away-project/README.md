@@ -1,34 +1,38 @@
-<p><a target="_blank" href="https://app.eraser.io/workspace/SUukoDZZGbo0NF0fxbT4" id="edit-in-eraser-github-link"><img alt="Edit in Eraser" src="https://firebasestorage.googleapis.com/v0/b/second-petal-295822.appspot.com/o/images%2Fgithub%2FOpen%20in%20Eraser.svg?alt=media&amp;token=968381c8-a7e7-472a-8ed6-4a6626da5501"></a></p>
-
-
-
 ### Next App
-
 
 ```sh
 npx create-next-app@latest home-away
 ```
+
 ```sh
 npm run dev
 ```
+
 ### Remove Boilerplate
+
 - in globals.css remove all code after directives
 - page.tsx
+
 ```tsx
 function HomePage() {
   return <h1 className='text-3xl'>HomePage</h1>;
 }
 export default HomePage;
 ```
+
 - layout.tsx
+
 ```tsx
 export const metadata: Metadata = {
   title: 'HomeAway',
   description: 'Feel at home, away from home.',
 };
 ```
+
 - get a hold of the README.MD
+
 ### Create Pages
+
 - bookings
 - checkout
 - favorites
@@ -36,26 +40,34 @@ export const metadata: Metadata = {
 - properties
 - rentals
 - reviews
+
 - new file - pageName/page.tsx
+
 ```tsx
 function BookingsPage() {
   return <h1 className='text-3xl'>BookingsPage</h1>;
 }
 export default BookingsPage;
 ```
-### Shadcn/ui
-[﻿Docs](https://ui.shadcn.com/) 
 
-[﻿Next Install](https://ui.shadcn.com/docs/installation/next) 
+### Shadcn/ui
+
+[Docs](https://ui.shadcn.com/)
+
+[Next Install](https://ui.shadcn.com/docs/installation/next)
 
 ```sh
 npx shadcn-ui@latest init
+
 ```
+
 - New York
 - Zinc
+
 ```sh
 npx shadcn-ui@latest add button
 ```
+
 ```tsx
 import { Button } from '@/components/ui/button';
 
@@ -71,27 +83,34 @@ function HomePage() {
 }
 export default HomePage;
 ```
+
 ```sh
 npx shadcn-ui@latest add breadcrumb calendar card checkbox dropdown-menu input label popover scroll-area select separator table textarea toast skeleton
 ```
+
 - components
-    - ui
-    - card
-    - form
-    - home
-    - navbar
-    - properties
+  - ui
+  - card
+  - form
+  - home
+  - navbar
+  - properties
+
 ### Navbar - Setup
+
 - create
+
 - navbar
-    - DarkMode.tsx
-    - LinksDropdown.tsx
-    - Logo.tsx
-    - Navbar.tsx
-    - NavSearch.tsx
-    - SignOutLink.tsx
-    - UserIcon.tsx
+  - DarkMode.tsx
+  - LinksDropdown.tsx
+  - Logo.tsx
+  - Navbar.tsx
+  - NavSearch.tsx
+  - SignOutLink.tsx
+  - UserIcon.tsx
+
 ### Tailwind Custom Class
+
 globals.css
 
 ```css
@@ -101,7 +120,9 @@ globals.css
   }
 }
 ```
+
 ### Navbar - Structure
+
 ```tsx
 import NavSearch from './NavSearch';
 import LinksDropdown from './LinksDropdown';
@@ -122,6 +143,7 @@ function Navbar() {
 }
 export default Navbar;
 ```
+
 ```tsx
 import Navbar from '@/components/navbar/Navbar';
 
@@ -134,11 +156,14 @@ return (
   </html>
 );
 ```
+
 ### Logo
+
 ```sh
 npm install react-icons
 ```
-[﻿Lucide Icons](https://react-icons.github.io/react-icons/) 
+
+[Lucide Icons](https://react-icons.github.io/react-icons/)
 
 ```tsx
 import Link from 'next/link';
@@ -155,7 +180,9 @@ function Logo() {
   );
 }
 ```
+
 ### NavSearch
+
 ```tsx
 import { Input } from '../ui/input';
 
@@ -170,13 +197,18 @@ function NavSearch() {
 }
 export default NavSearch;
 ```
+
 ### Theme
-[﻿Theming Options](https://ui.shadcn.com/docs/theming)
-[﻿Themes](https://ui.shadcn.com/themes) 
+
+[Theming Options](https://ui.shadcn.com/docs/theming)
+[Themes](https://ui.shadcn.com/themes)
 
 - replace css variables in in globals.css
+
 ### Providers
+
 - create app/providers.tsx
+
 ```tsx
 'use client';
 
@@ -185,6 +217,7 @@ function Providers({ children }: { children: React.ReactNode }) {
 }
 export default Providers;
 ```
+
 layout.tsx
 
 ```tsx
@@ -201,13 +234,17 @@ return (
   </html>
 );
 ```
+
 ### DarkMode
-[﻿Next.js Dark Mode](https://ui.shadcn.com/docs/dark-mode/next) 
+
+[Next.js Dark Mode](https://ui.shadcn.com/docs/dark-mode/next)
 
 ```sh
 npm install next-themes
 ```
+
 - create app/theme-provider.tsx
+
 ```tsx
 'use client';
 
@@ -219,6 +256,7 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
 }
 ```
+
 providers.tsx
 
 ```tsx
@@ -239,8 +277,11 @@ function Providers({ children }: { children: React.ReactNode }) {
 }
 export default Providers;
 ```
+
 ### DarkMode
+
 - make sure you export as default !!!
+
 ```tsx
 'use client';
 
@@ -283,7 +324,9 @@ export default function ModeToggle() {
   );
 }
 ```
+
 ### UserIcon
+
 ```tsx
 import { LuUser2 } from 'react-icons/lu';
 
@@ -292,8 +335,11 @@ function UserIcon() {
 }
 export default UserIcon;
 ```
+
 ### Links Data
+
 - create utils/links.ts
+
 ```ts
 type NavLink = {
   href: string;
@@ -310,7 +356,9 @@ export const links: NavLink[] = [
   { href: '/profile ', label: 'profile' },
 ];
 ```
+
 ### LinksDropdown
+
 ```tsx
 import {
   DropdownMenu,
@@ -351,20 +399,26 @@ function LinksDropdown() {
 }
 export default LinksDropdown;
 ```
+
 ### Clerk
-[﻿Clerk Docs](https://clerk.com/)
-[﻿Clerk + Next.js Setup](https://clerk.com/docs/quickstarts/nextjs) 
+
+[Clerk Docs](https://clerk.com/)
+[Clerk + Next.js Setup](https://clerk.com/docs/quickstarts/nextjs)
 
 - create new application
+
 ```sh
 npm install @clerk/nextjs
 ```
+
 - create .env.local
+
 ```bash
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
 CLERK_SECRET_KEY=
 ```
-In Next.js, environment variables that start with NEXT_PUBLIC_ are exposed to the browser. This means they can be accessed in your front-end code.
+
+In Next.js, environment variables that start with NEXT*PUBLIC* are exposed to the browser. This means they can be accessed in your front-end code.
 
 For example, NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY can be used in both server-side and client-side code.
 
@@ -388,7 +442,9 @@ return (
   </ClerkProvider>
 );
 ```
+
 - create middleware.ts
+
 ```ts
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
@@ -409,12 +465,17 @@ export const config = {
   matcher: ['/((?!.*\\..*|_next).*)', '/', '/(api|trpc)(.*)'],
 };
 ```
+
 - restart dev server
+
 ### SignUp/SignIn and Customize Avatar (optional)
+
 - customization
-    - avatars
+  - avatars
+
 ### Toast Component
-[﻿Toast](https://ui.shadcn.com/docs/components/toast) 
+
+[Toast](https://ui.shadcn.com/docs/components/toast)
 
 providers.tsx
 
@@ -440,8 +501,11 @@ function Providers({ children }: { children: React.ReactNode }) {
 }
 export default Providers;
 ```
+
 ### SignOutLink
+
 - redirectUrl
+
 ```tsx
 'use client';
 
@@ -463,7 +527,9 @@ function SignOutLink() {
 }
 export default SignOutLink;
 ```
+
 ### LinksDropdown - Complete
+
 ```tsx
 return (
   <DropdownMenuContent>
@@ -472,6 +538,7 @@ return (
   </DropdownMenuContent>
 );
 ```
+
 ```tsx
 return (
   <DropdownMenuContent className='w-52' align='start' sideOffset={10}>
@@ -506,16 +573,21 @@ return (
   </DropdownMenuContent>
 );
 ```
+
 ### Direct User
+
 .env.local
 
 ```bash
 NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/profile/create
 NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/profile/create
 ```
+
 ### Create Profile
+
 - profile
-    - create
+  - create
+
 ```tsx
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -546,8 +618,11 @@ function CreateProfile() {
 }
 export default CreateProfile;
 ```
+
 ### FormInput
+
 - components/form/FormInput.tsx
+
 ```tsx
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
@@ -586,8 +661,11 @@ function FormInput({
 
 export default FormInput;
 ```
+
 ### Default Submit Button
+
 - components/form/Buttons.tsx
+
 ```tsx
 'use client';
 import { ReloadIcon } from '@radix-ui/react-icons';
@@ -623,8 +701,11 @@ export function SubmitButton({
   );
 }
 ```
+
 ### FormContainer
+
 - create components/form/FormContainer.tsx
+
 ```tsx
 'use client';
 
@@ -655,14 +736,18 @@ function FormContainer({
 }
 export default FormContainer;
 ```
+
 - create utils/types.ts
+
 ```ts
 export type actionFunction = (
   prevState: any,
   formData: FormData
 ) => Promise<{ message: string }>;
 ```
+
 ### Create Profile - Refactor
+
 ```tsx
 import FormInput from '@/components/form/FormInput';
 import { SubmitButton } from '@/components/form/Buttons';
@@ -694,13 +779,17 @@ function CreateProfile() {
 }
 export default CreateProfile;
 ```
+
 ### Zod
+
 Zod is a JavaScript library for building schemas and validating data, providing type safety and error handling.
 
 ```sh
 npm install zod
 ```
+
 - create utils/schemas.ts
+
 ```ts
 import * as z from 'zod';
 import { ZodSchema } from 'zod';
@@ -712,8 +801,10 @@ export const profileSchema = z.object({
   username: z.string(),
 });
 ```
+
 - create utils/actions.ts
 - import in profile/create page.tsx
+
 ```ts
 'use server';
 
@@ -734,31 +825,41 @@ export const createProfileAction = async (
   }
 };
 ```
+
 ### Supabase
+
 - create account and organization
 - create project
 - setup password in .env (optional)
 - add .env to .gitignore !!!
 - it will take few minutes
+
 ### Prisma
+
 - install prisma vs-code extension
+
 Prisma ORM is a database toolkit that simplifies database access in web applications. It allows developers to interact with databases using a type-safe and auto-generated API, making database operations easier and more secure.
 
 - Prisma server: A standalone infrastructure component sitting on top of your database.
 - Prisma client: An auto-generated library that connects to the Prisma server and lets you read, write and stream data in your database. It is used for data access in your applications.
+
 ```sh
 npm install prisma --save-dev
 npm install @prisma/client
 ```
+
 ```sh
 npx prisma init
 ```
+
 ### Setup Instance
+
 In development, the command next dev clears Node.js cache on run. This in turn initializes a new PrismaClient instance each time due to hot reloading that creates a connection to the database. This can quickly exhaust the database connections as each PrismaClient instance holds its own connection pool.
 
-(Prisma Instance)[[﻿https://www.prisma.io/docs/guides/other/troubleshooting-orm/help-articles/nextjs-prisma-client-dev-practices#solution]](https://www.prisma.io/docs/guides/other/troubleshooting-orm/help-articles/nextjs-prisma-client-dev-practices#solution%5D) 
+(Prisma Instance)[https://www.prisma.io/docs/guides/other/troubleshooting-orm/help-articles/nextjs-prisma-client-dev-practices#solution]
 
 - create utils/db.ts
+
 ```ts
 import { PrismaClient } from '@prisma/client';
 
@@ -778,17 +879,23 @@ export default prisma;
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 ```
+
 ### Connect Supabase with Prisma
-[﻿Useful Info](https://supabase.com/partners/integrations/prisma) 
+
+[Useful Info](https://supabase.com/partners/integrations/prisma)
 
 - add to .env
+
 ```bash
 DATABASE_URL=""
 DIRECT_URL=""
 ```
+
 - DATABASE_URL : Transaction + Password + "?pgbouncer=true&connection_limit=1"
 - DIRECT_URL : Session + Password
+
 ### Profile Model
+
 ```prisma
 model Profile {
   id           String     @id @default(uuid())
@@ -800,10 +907,13 @@ model Profile {
   profileImage String
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+
 }
 ```
+
 ### CreateProfile Action - Complete
-[﻿Clerk User Metadata](https://clerk.com/docs/users/metadata) 
+
+[Clerk User Metadata](https://clerk.com/docs/users/metadata)
 
 ```ts
 import db from './db';
@@ -843,7 +953,9 @@ export const createProfileAction = async (
   redirect('/');
 };
 ```
+
 ### FetchProfileImage
+
 actions.ts
 
 ```ts
@@ -862,7 +974,9 @@ export const fetchProfileImage = async () => {
   return profile?.profileImage;
 };
 ```
+
 - components/navbar/UserIcon.tsx
+
 ```tsx
 import { LuUser2 } from 'react-icons/lu';
 import { fetchProfileImage } from '@/utils/actions';
@@ -878,7 +992,9 @@ async function UserIcon() {
 }
 export default UserIcon;
 ```
+
 ### Modify Create Profile
+
 ```tsx
 import { currentUser } from '@clerk/nextjs/server';
 
@@ -889,7 +1005,9 @@ async function CreateProfile() {
   ....
 }
 ```
+
 ### Update Profile
+
 actions.ts
 
 ```ts
@@ -902,6 +1020,7 @@ const getAuthUser = async () => {
   return user;
 };
 ```
+
 ```ts
 export const fetchProfile = async () => {
   const user = await getAuthUser();
@@ -915,6 +1034,7 @@ export const fetchProfile = async () => {
   return profile;
 };
 ```
+
 ```ts
 export const updateProfileAction = async (
   prevState: any,
@@ -923,6 +1043,7 @@ export const updateProfileAction = async (
   return { message: 'update profile action' };
 };
 ```
+
 app/profile/page.tsx
 
 ```tsx
@@ -969,6 +1090,7 @@ async function ProfilePage() {
 }
 export default ProfilePage;
 ```
+
 actions.ts
 
 ```ts
@@ -997,7 +1119,9 @@ export const updateProfileAction = async (
   }
 };
 ```
+
 ### Alternative Error Handling
+
 actions.ts
 
 ```ts
@@ -1008,6 +1132,7 @@ const renderError = (error: unknown): { message: string } => {
   };
 };
 ```
+
 ```ts
 export const updateProfileAction = async (
   prevState: any,
@@ -1036,7 +1161,9 @@ export const updateProfileAction = async (
   }
 };
 ```
+
 ### ValidateWithZodSchema
+
 schemas.ts
 
 ```ts
@@ -1053,6 +1180,7 @@ export function validateWithZodSchema<T>(
   return result.data;
 }
 ```
+
 actions.ts
 
 ```ts
@@ -1070,7 +1198,9 @@ await db.profile.update({
   data: validatedFields,
 });
 ```
+
 ### ImageInput
+
 components/form/ImageInput.tsx
 
 ```tsx
@@ -1097,7 +1227,9 @@ function ImageInput() {
 }
 export default ImageInput;
 ```
+
 ### SubmitButton
+
 ```tsx
 type btnSize = 'default' | 'lg' | 'sm';
 
@@ -1132,7 +1264,9 @@ export function SubmitButton({
   );
 }
 ```
+
 ### ImageInputContainer
+
 components/form/ImageInputContainer.tsx
 
 ```tsx
@@ -1196,7 +1330,9 @@ function ImageInputContainer(props: ImageInputContainerProps) {
 }
 export default ImageInputContainer;
 ```
+
 ### updateProfileImageAction
+
 actions.ts
 
 ```ts
@@ -1207,7 +1343,9 @@ export const updateProfileImageAction = async (
   return { message: 'Profile image updated successfully' };
 };
 ```
+
 ### Profile Page
+
 ```tsx
 import {
   updateProfileAction,
@@ -1226,7 +1364,9 @@ import ImageInputContainer from '@/components/form/ImageInputContainer';
   text='Update Profile Image'
 />;
 ```
+
 ### Remote Patterns
+
 ```mjs
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -1242,7 +1382,9 @@ const nextConfig = {
 
 export default nextConfig;
 ```
+
 ### imageSchema
+
 schemas.ts
 
 ```ts
@@ -1265,12 +1407,14 @@ function validateFile() {
     }, 'File must be an image');
 }
 ```
+
 The .refine() method in Zod is used to add custom validation to a Zod schema. It takes two arguments:
 
 A function that takes a value and returns a boolean. This function is the validation rule. If it returns true, the validation passes. If it returns false, the validation fails.
 A string that is the error message to be returned when the validation fails.
 
 ### updateProfileImageAction
+
 ```ts
 export const updateProfileImageAction = async (
   prevState: any,
@@ -1287,15 +1431,20 @@ export const updateProfileImageAction = async (
   }
 };
 ```
+
 ### Create Bucket, Setup Policy and API Keys
+
 ```env
 SUPABASE_URL=
 SUPABASE_KEY=
 ```
+
 ### Setup Supabase
+
 ```sh
 npm install @supabase/supabase-js
 ```
+
 utils/supabase.ts
 
 ```ts
@@ -1323,7 +1472,9 @@ export const uploadImage = async (image: File) => {
   return supabase.storage.from(bucket).getPublicUrl(newName).data.publicUrl;
 };
 ```
+
 ### updateProfileImageAction
+
 ```ts
 export const updateProfileImageAction = async (
   prevState: any,
@@ -1350,7 +1501,9 @@ export const updateProfileImageAction = async (
   }
 };
 ```
+
 ### Remote Patterns
+
 ```mjs
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -1370,7 +1523,9 @@ const nextConfig = {
 
 export default nextConfig;
 ```
+
 ### Property Model
+
 ```prisma
 model Profile {
   properties      Property[]
@@ -1396,8 +1551,11 @@ model Property {
   profileId   String
 }
 ```
+
 ### Property Schema
+
 - yes, no image 😜
+
 schemas.ts
 
 ```ts
@@ -1447,7 +1605,9 @@ export const propertySchema = z.object({
   amenities: z.string(),
 });
 ```
+
 ### createPropertyAction
+
 actions.ts
 
 ```ts
@@ -1465,8 +1625,11 @@ export const createPropertyAction = async (
   redirect('/');
 };
 ```
+
 ### Create Rental Page
+
 - app/rentals/create/page.tsx
+
 ```tsx
 import FormInput from '@/components/form/FormInput';
 import FormContainer from '@/components/form/FormContainer';
@@ -1507,8 +1670,11 @@ function CreateProperty() {
 }
 export default CreateProperty;
 ```
+
 ### Price Input
+
 - components/form/PriceInput.tsx
+
 ```ts
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
@@ -1539,12 +1705,16 @@ function PriceInput({ defaultValue }: FormInputNumberProps) {
 }
 export default PriceInput;
 ```
+
 ```tsx
 /* price */
 <PriceInput />
 ```
+
 ### Categories Data
+
 - utils/categories.ts
+
 ```ts
 import { IconType } from 'react-icons';
 import { MdCabin } from 'react-icons/md';
@@ -1617,7 +1787,9 @@ export const categories: Category[] = [
   },
 ];
 ```
+
 ### Categories Input
+
 ```tsx
 import { Label } from '@/components/ui/label';
 import { categories } from '@/utils/categories';
@@ -1661,12 +1833,16 @@ function CategoriesInput({ defaultValue }: { defaultValue?: string }) {
 }
 export default CategoriesInput;
 ```
+
 ```tsx
 /* categories */
 <CategoriesInput />
 ```
+
 ### TextArea Input
+
 - components/form/TextAreaInput.tsx
+
 ```tsx
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -1699,15 +1875,20 @@ const tempDefaultDescription =
   'Glamping Tuscan Style in an Aframe Cabin Tent, nestled in a beautiful olive orchard. AC, heat, Queen Bed, TV, Wi-Fi and an amazing view. Close to Weeki Wachee River State Park, mermaids, manatees, Chassahwitzka River and on the SC Bike Path. Kayaks available for rivers. Bathhouse, fire pit, Kitchenette, fresh eggs. Relax & enjoy fresh country air. No pets please. Ducks, hens and roosters roam the grounds. We have a Pot Cake Rescue from Bimini, Retriever and Pom dog. The space is inspiring and relaxing. Enjoy the beauty of the orchard. Spring trees are in blossom and harvested in Fall. We have a farm store where we sell our farm to table products';
 export default TextAreaInput;
 ```
+
 ```tsx
 /* text area / description */
 <TextAreaInput name='description' labelText='Description (10 - 1000 Words)' />
 ```
+
 ### Countries Input
+
 ```sh
 npm i world-countries
 ```
+
 - utils/countries.ts
+
 ```ts
 import countries from 'world-countries';
 
@@ -1721,7 +1902,9 @@ export const formattedCountries = countries.map((item) => ({
 export const findCountryByCode = (code: string) =>
   formattedCountries.find((item) => item.code === code);
 ```
+
 - components/form/CountriesInput.tsx
+
 ```tsx
 import { Label } from '@/components/ui/label';
 import { formattedCountries } from '@/utils/countries';
@@ -1765,14 +1948,18 @@ function CountriesInput({ defaultValue }: { defaultValue?: string }) {
 }
 export default CountriesInput;
 ```
+
 ```tsx
 <div className='grid sm:grid-cols-2 gap-8 mt-4'>
   <CountriesInput />
   <ImageInput />
 </div>
 ```
+
 ### Accommodation / Counter Input
+
 - components/form/CounterInput.tsx
+
 ```tsx
 'use client';
 import { Card, CardHeader } from '@/components/ui/card';
@@ -1838,6 +2025,7 @@ function CounterInput({
 
 export default CounterInput;
 ```
+
 ```tsx
 return (
   <>
@@ -1849,8 +2037,11 @@ return (
   </>
 );
 ```
+
 ### Amenities
+
 - utils/amenities.ts
+
 ```ts
 import { IconType } from 'react-icons';
 export type Amenity = {
@@ -1943,7 +2134,9 @@ export const conservativeAmenities: Amenity[] = [
   { name: 'first aid kit', icon: FiTv, selected: false },
 ];
 ```
+
 - components/form/AmenitiesInput.tsx
+
 ```tsx
 'use client';
 import { useState } from 'react';
@@ -1996,6 +2189,7 @@ function AmenitiesInput({ defaultValue }: { defaultValue?: Amenity[] }) {
 }
 export default AmenitiesInput;
 ```
+
 ```tsx
 return (
   <>
@@ -2004,7 +2198,9 @@ return (
   </>
 );
 ```
+
 ### createRentalAction
+
 ```tsx
 export const createPropertyAction = async (
   prevState: any,
@@ -2032,7 +2228,9 @@ export const createPropertyAction = async (
   redirect('/');
 };
 ```
+
 ### fetchProperties
+
 utils/types.ts
 
 ```ts
@@ -2045,6 +2243,7 @@ export type PropertyCardProps = {
   price: number;
 };
 ```
+
 actions.ts
 
 ```ts
@@ -2075,12 +2274,15 @@ export const fetchProperties = async ({
   return properties;
 };
 ```
+
 ### Home Page
+
 - create in components/home
-    - CategoriesList.tsx
-    - EmptyList.tsx
-    - PropertiesContainer.tsx
-    - PropertiesList.tsx
+  - CategoriesList.tsx
+  - EmptyList.tsx
+  - PropertiesContainer.tsx
+  - PropertiesList.tsx
+
 ```tsx
 import CategoriesList from '@/components/home/CategoriesList';
 import PropertiesContainer from '@/components/home/PropertiesContainer';
@@ -2095,7 +2297,9 @@ function HomePage() {
 }
 export default HomePage;
 ```
+
 ### Search Params
+
 ```tsx
 import CategoriesList from '@/components/home/CategoriesList';
 import PropertiesContainer from '@/components/home/PropertiesContainer';
@@ -2122,7 +2326,9 @@ function HomePage({
 }
 export default HomePage;
 ```
+
 ### CategoriesList
+
 ```tsx
 import { categories } from '@/utils/categories';
 import { ScrollArea, ScrollBar } from '../ui/scroll-area';
@@ -2166,7 +2372,9 @@ function CategoriesList({
 }
 export default CategoriesList;
 ```
+
 ### EmptyList
+
 ```tsx
 import { Button } from '../ui/button';
 import Link from 'next/link';
@@ -2192,7 +2400,9 @@ function EmptyList({
 }
 export default EmptyList;
 ```
+
 ### PropertiesContainer
+
 ```tsx
 import { fetchProperties } from '@/utils/actions';
 import PropertiesList from './PropertiesList';
@@ -2225,15 +2435,19 @@ async function PropertiesContainer({
 }
 export default PropertiesContainer;
 ```
+
 ### Card Components
+
 - components/card
-    - CountryFlagAndName.tsx
-    - FavoriteToggleButton.tsx
-    - FavoriteToggleForm.tsx
-    - LoadingCards.tsx
-    - PropertyCard.tsx
-    - PropertyRating.tsx
+  - CountryFlagAndName.tsx
+  - FavoriteToggleButton.tsx
+  - FavoriteToggleForm.tsx
+  - LoadingCards.tsx
+  - PropertyCard.tsx
+  - PropertyRating.tsx
+
 ### PropertiesList
+
 ```tsx
 import PropertyCard from '../card/PropertyCard';
 import type { PropertyCardProps } from '@/utils/types';
@@ -2249,8 +2463,11 @@ function PropertiesList({ properties }: { properties: PropertyCardProps[] }) {
 }
 export default PropertiesList;
 ```
+
 ### formatCurrency
+
 - utils/format.ts
+
 ```ts
 export const formatCurrency = (amount: number | null) => {
   const value = amount || 0;
@@ -2262,7 +2479,9 @@ export const formatCurrency = (amount: number | null) => {
   }).format(value);
 };
 ```
+
 ### PropertyCard
+
 ```tsx
 import Image from 'next/image';
 import Link from 'next/link';
@@ -2313,7 +2532,9 @@ function PropertyCard({ property }: { property: PropertyCardProps }) {
 }
 export default PropertyCard;
 ```
+
 ### Property Rating
+
 ```tsx
 import { FaStar } from 'react-icons/fa';
 
@@ -2341,10 +2562,13 @@ async function PropertyRating({
 
 export default PropertyRating;
 ```
+
 ```tsx
 <PropertyRating inPage={false} propertyId={propertyId} />
 ```
+
 ### FavoriteToggleButton
+
 ```tsx
 import { FaHeart } from 'react-icons/fa';
 import { Button } from '@/components/ui/button';
@@ -2357,12 +2581,15 @@ function FavoriteToggleButton({ propertyId }: { propertyId: string }) {
 }
 export default FavoriteToggleButton;
 ```
+
 ```tsx
 <div className='absolute top-5 right-5 z-5'>
   <FavoriteToggleButton propertyId={propertyId} />
 </div>
 ```
+
 ### CountryFlagAndName
+
 ```tsx
 import { findCountryByCode } from '@/utils/countries';
 
@@ -2380,11 +2607,15 @@ function CountryFlagAndName({ countryCode }: { countryCode: string }) {
 }
 export default CountryFlagAndName;
 ```
+
 ```tsx
 <CountryFlagAndName countryCode={country} />
 ```
+
 ### Suspense
+
 - app/loading.tsx - always an option
+
 components/card/LoadingCards.tsx
 
 ```tsx
@@ -2412,10 +2643,12 @@ export function SkeletonCard() {
   );
 }
 ```
+
 app/page.tsx
 
 - navigate to a different page, refresh and then navigate back to home page
 - make sure you fetch in component not page
+
 ```tsx
 import CategoriesList from '@/components/home/CategoriesList';
 import PropertiesContainer from '@/components/home/PropertiesContainer';
@@ -2443,10 +2676,13 @@ function HomePage({
 }
 export default HomePage;
 ```
+
 ### SearchInput
+
 ```sh
 npm i use-debounce
 ```
+
 components/navbar/NavSearch.tsx
 
 ```tsx
@@ -2493,8 +2729,11 @@ function NavSearch() {
 }
 export default NavSearch;
 ```
+
 ### Favorites Model
+
 ```prisma
+
 model Profile {
 favorites    Favorite[]
 }
@@ -2516,10 +2755,13 @@ model Favorite {
 
 }
 ```
+
 ```sh
 npx prisma db push
 ```
+
 ### CardSignInButton
+
 components/form/Buttons.tsx
 
 ```tsx
@@ -2542,6 +2784,7 @@ export const CardSignInButton = () => {
   );
 };
 ```
+
 components/card/FavoriteToggleButton.tsx
 
 ```tsx
@@ -2560,7 +2803,9 @@ function FavoriteToggleButton({ propertyId }: { propertyId: string }) {
 }
 export default FavoriteToggleButton;
 ```
+
 ### fetchFavorite
+
 actions.ts
 
 ```ts
@@ -2585,7 +2830,9 @@ export const toggleFavoriteAction = async () => {
   return { message: 'toggle favorite' };
 };
 ```
+
 ### FavoriteToggleButton - Complete
+
 ```tsx
 import { auth } from '@clerk/nextjs/server';
 import { CardSignInButton } from '../form/Buttons';
@@ -2600,7 +2847,9 @@ async function FavoriteToggleButton({ propertyId }: { propertyId: string }) {
 }
 export default FavoriteToggleButton;
 ```
+
 ### CardSubmitButton
+
 components/form/Buttons.tsx
 
 ```tsx
@@ -2624,7 +2873,9 @@ export const CardSubmitButton = ({ isFavorite }: { isFavorite: boolean }) => {
   );
 };
 ```
+
 ### FavoriteToggleForm
+
 ```tsx
 'use client';
 
@@ -2656,7 +2907,9 @@ function FavoriteToggleForm({
 }
 export default FavoriteToggleForm;
 ```
+
 ### toggleFavoriteAction
+
 actions.ts
 
 ```ts
@@ -2689,7 +2942,9 @@ export const toggleFavoriteAction = async (prevState: {
   }
 };
 ```
+
 ### fetchFavorites
+
 actions.ts
 
 ```ts
@@ -2715,8 +2970,11 @@ export const fetchFavorites = async () => {
   return favorites.map((favorite) => favorite.property);
 };
 ```
+
 ### Favorites Page
+
 - favorites/loading.tsx
+
 ```tsx
 'use client';
 import LoadingCards from '@/components/card/LoadingCards';
@@ -2726,7 +2984,9 @@ function loading() {
 }
 export default loading;
 ```
+
 - favorites/page.tsx
+
 ```tsx
 import EmptyList from '@/components/home/EmptyList';
 import PropertiesList from '@/components/home/PropertiesList';
@@ -2743,7 +3003,9 @@ async function FavoritesPage() {
 }
 export default FavoritesPage;
 ```
+
 ### fetchPropertyDetails
+
 ```ts
 export const fetchPropertyDetails = (id: string) => {
   return db.property.findUnique({
@@ -2756,7 +3018,9 @@ export const fetchPropertyDetails = (id: string) => {
   });
 };
 ```
+
 - properties/[id]/loading.tsx
+
 ```ts
 'use client';
 
@@ -2767,7 +3031,9 @@ function loading() {
 
 export default loading;
 ```
+
 - properties/[id]/page.tsx
+
 ```tsx
 import { fetchPropertyDetails } from '@/utils/actions';
 import { redirect } from 'next/navigation';
@@ -2781,8 +3047,11 @@ async function PropertyDetailsPage({ params }: { params: { id: string } }) {
 }
 export default PropertyDetailsPage;
 ```
+
 ### BreadCrumbs
+
 - components/properties/BreadCrumbs.tsx
+
 ```tsx
 import {
   Breadcrumb,
@@ -2810,7 +3079,9 @@ function BreadCrumbs({ name }: { name: string }) {
 }
 export default BreadCrumbs;
 ```
+
 - properties/[id]/page.tsx
+
 ```tsx
 return (
   <section>
@@ -2825,13 +3096,17 @@ return (
   </section>
 );
 ```
+
 ### ShareButton
-[﻿React Share](https://www.npmjs.com/package/react-share) 
+
+[React Share](https://www.npmjs.com/package/react-share)
 
 ```sh
 npm i react-share
 ```
+
 - components/properties/ShareButton.tsx
+
 ```tsx
 'use client';
 import {
@@ -2889,7 +3164,9 @@ function ShareButton({
 }
 export default ShareButton;
 ```
+
 - properties/[id]/page.tsx
+
 ```tsx
 return (
   <div className='flex items-center gap-x-4'>
@@ -2898,8 +3175,11 @@ return (
   </div>
 );
 ```
+
 ### ImageContainer
+
 - components/properties/ImageContainer.tsx
+
 ```tsx
 import Image from 'next/image';
 
@@ -2925,12 +3205,17 @@ function ImageContainer({
 }
 export default ImageContainer;
 ```
+
 - properties/[id]/page.tsx
+
 ```tsx
 <ImageContainer mainImage={property.image} name={property.name} />
 ```
+
 ### Col Layout
+
 - properties/[id]/page.tsx
+
 ```tsx
 return (
   <section className='lg:grid lg:grid-cols-12 gap-x-12 mt-12'>
@@ -2946,8 +3231,11 @@ return (
   </section>
 );
 ```
+
 ### Calendar - Initial Setup
+
 - components/properties/booking/BookingCalendar.tsx
+
 ```tsx
 'use client';
 import { useState } from 'react';
@@ -2973,21 +3261,28 @@ export default function App() {
   );
 }
 ```
+
 - properties/[id]/page.tsx
+
 ```tsx
 <div className='lg:col-span-4 flex flex-col items-center'>
   {/* calendar */}
   <BookingCalendar />
 </div>
 ```
+
 ### PropertyDetails
+
 - utils/format.ts
+
 ```ts
 export function formatQuantity(quantity: number, noun: string): string {
   return quantity === 1 ? `${quantity} ${noun}` : `${quantity} ${noun}s`;
 }
 ```
+
 - components/properties/PropertyDetails.tsx
+
 ```tsx
 import { formatQuantity } from '@/utils/format';
 
@@ -3014,12 +3309,17 @@ function PropertyDetails({
 }
 export default PropertyDetails;
 ```
+
 - properties/[id]/page.tsx
+
 ```tsx
 <PropertyDetails details={details} />
 ```
+
 ### UserInfo
+
 - components/properties/UserInfo.tsx
+
 ```tsx
 import Image from 'next/image';
 
@@ -3054,22 +3354,29 @@ function UserInfo({ profile: { profileImage, firstName } }: UserInfoProps) {
 }
 export default UserInfo;
 ```
+
 - properties/[id]/page.tsx
+
 ```tsx
 const firstName = property.profile.firstName;
 const profileImage = property.profile.profileImage;
 
 <UserInfo profile={{ firstName, profileImage }} />;
 ```
+
 ### Description
+
 - components/properties/Title.tsx
+
 ```tsx
 function Title({ text }: { text: string }) {
   return <h3 className='text-lg font-bold  mb-2'>{text}</h3>;
 }
 export default Title;
 ```
+
 - components/properties/Description.tsx
+
 ```tsx
 'use client';
 import { useState } from 'react';
@@ -3106,13 +3413,18 @@ const Description = ({ description }: { description: string }) => {
 
 export default Description;
 ```
+
 - properties/[id]/page.tsx
+
 ```tsx
 <Separator className='mt-4' />
 <Description description={property.description} />
 ```
+
 ### Amenities
+
 - components/properties/Amenities.tsx
+
 ```tsx
 import { Amenity } from '@/utils/amenities';
 import { LuFolderCheck } from 'react-icons/lu';
@@ -3148,22 +3460,29 @@ function Amenities({ amenities }: { amenities: string }) {
 }
 export default Amenities;
 ```
+
 - properties/[id]/page.tsx
+
 ```tsx
 <Amenities amenities={property.amenities} />
 ```
+
 ### PropertyMap
-[﻿React Leaflet](https://react-leaflet.js.org/) 
+
+[React Leaflet](https://react-leaflet.js.org/)
 
 Leaflet makes direct calls to the DOM when it is loaded, therefore React Leaflet is not compatible with server-side rendering.
 
 ```sh
 npm install react react-dom leaflet react-leaflet
 ```
+
 ```sh
 npm install -D @types/leaflet
 ```
+
 - components/properties/PropertyMap.tsx
+
 ```tsx
 'use client';
 import { MapContainer, TileLayer, Marker, ZoomControl } from 'react-leaflet';
@@ -3212,7 +3531,9 @@ function PropertyMap({ countryCode }: { countryCode: string }) {
 }
 export default PropertyMap;
 ```
+
 - properties/[id]/page.tsx
+
 ```tsx
 const DynamicMap = dynamic(
   () => import('@/components/properties/PropertyMap'),
@@ -3223,26 +3544,670 @@ const DynamicMap = dynamic(
 );
 return <DynamicMap countryCode={property.country} />;
 ```
+
 Lazy Loading: Components wrapped with dynamic are lazy loaded. This means that the component code is not loaded until it is needed. For example, if you have a component that is only visible when a user clicks a button, you could use dynamic to ensure that the code for that component is not loaded until the button is clicked.
 
 Server Side Rendering (SSR) Control: By default, Next.js pre-renders every page. This means that it generates HTML for each page in advance, instead of doing it all on the client-side. However, with dynamic, you can control this behavior. You can choose to disable SSR for specific modules, which can be useful for modules that have client-side dependencies.
 
 ### Deploy
+
 ```json
 "scripts": {
-  "dev": "next dev",
-  "build": "npx prisma generate && next build",
-  "start": "next start",
-  "lint": "next lint"
-},
+    "dev": "next dev",
+    "build": "npx prisma generate && next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
 ```
+
 - refactor NavSearch Component
 
+### Review Model
 
+```prisma
 
+model Review {
+  id        String   @id @default(uuid())
+  profile   Profile  @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
+  profileId String
+  property   Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  propertyId String
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model Property {
+ reviews Review[]
+}
+model Profile {
+ reviews Review[]
+}
+```
 
+DON'T FORGET !!!!
 
+```sh
+npx prisma db push
+```
 
+- restart server
 
+### Reviews Setup
 
-<!--- Eraser file: https://app.eraser.io/workspace/SUukoDZZGbo0NF0fxbT4 --->
+- create components/reviews
+
+  - Comment.tsx
+  - PropertyReviews.tsx
+  - Rating.tsx
+  - SubmitReview.tsx
+  - ReviewCard.tsx
+
+- create placeholder functions in actions.ts
+
+```ts
+export const createReviewAction = async () => {
+  return { message: 'create review' };
+};
+
+export const fetchPropertyReviews = async () => {
+  return { message: 'fetch reviews' };
+};
+
+export const fetchPropertyReviewsByUser = async () => {
+  return { message: 'fetch user reviews' };
+};
+
+export const deleteReviewAction = async () => {
+  return { message: 'delete  reviews' };
+};
+```
+
+### RatingInput
+
+- components/form/RatingInput.tsx
+
+```tsx
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+const RatingInput = ({
+  name,
+  labelText,
+}: {
+  name: string;
+  labelText?: string;
+}) => {
+  const numbers = Array.from({ length: 5 }, (_, i) => {
+    const value = i + 1;
+    return value.toString();
+  }).reverse();
+
+  return (
+    <div className='mb-2 max-w-xs'>
+      <Label htmlFor={name} className='capitalize'>
+        {labelText || name}
+      </Label>
+      <Select defaultValue={numbers[0]} name={name} required>
+        <SelectTrigger>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {numbers.map((number) => {
+            return (
+              <SelectItem key={number} value={number}>
+                {number}
+              </SelectItem>
+            );
+          })}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+};
+
+export default RatingInput;
+```
+
+### SubmitReview Component
+
+- app/properties/[id]
+
+```tsx
+return (
+  <section>
+    <section></section>
+    {/* after two column section */}
+    <SubmitReview propertyId={property.id} />;
+  </section>
+);
+```
+
+- components/reviews/SubmitReview.tsx
+
+```tsx
+'use client';
+import { useState } from 'react';
+import { SubmitButton } from '@/components/form/Buttons';
+import FormContainer from '@/components/form/FormContainer';
+import { Card } from '@/components/ui/card';
+import RatingInput from '@/components/form/RatingInput';
+import TextAreaInput from '@/components/form/TextAreaInput';
+import { Button } from '@/components/ui/button';
+import { createReviewAction } from '@/utils/actions';
+function SubmitReview({ propertyId }: { propertyId: string }) {
+  const [isReviewFormVisible, setIsReviewFormVisible] = useState(false);
+  return (
+    <div className='mt-8'>
+      <Button onClick={() => setIsReviewFormVisible((prev) => !prev)}>
+        Leave a Review
+      </Button>
+      {isReviewFormVisible && (
+        <Card className='p-8 mt-8'>
+          <FormContainer action={createReviewAction}>
+            <input type='hidden' name='propertyId' value={propertyId} />
+            <RatingInput name='rating' />
+            <TextAreaInput
+              name='comment'
+              labelText='your thoughts on this property'
+              defaultValue='Amazing place !!!'
+            />
+            <SubmitButton text='Submit' className='mt-4' />
+          </FormContainer>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+export default SubmitReview;
+```
+
+- optional : set rows prop in TextArea.tsx
+
+### Submit Review
+
+- utils/schemas.ts
+
+```ts
+export const createReviewSchema = z.object({
+  propertyId: z.string(),
+  rating: z.coerce.number().int().min(1).max(5),
+  comment: z.string().min(10).max(1000),
+});
+```
+
+- action.ts
+
+```ts
+export async function createReviewAction(prevState: any, formData: FormData) {
+  const user = await getAuthUser();
+  try {
+    const rawData = Object.fromEntries(formData);
+
+    const validatedFields = validateWithZodSchema(createReviewSchema, rawData);
+    await db.review.create({
+      data: {
+        ...validatedFields,
+        profileId: user.id,
+      },
+    });
+    revalidatePath(`/properties/${validatedFields.propertyId}`);
+    return { message: 'Review submitted successfully' };
+  } catch (error) {
+    return renderError(error);
+  }
+}
+```
+
+### Fetch Property Reviews
+
+- actions.ts
+
+```ts
+export async function fetchPropertyReviews(propertyId: string) {
+  const reviews = await db.review.findMany({
+    where: {
+      propertyId,
+    },
+    select: {
+      id: true,
+      rating: true,
+      comment: true,
+      profile: {
+        select: {
+          firstName: true,
+          profileImage: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+  return reviews;
+}
+```
+
+### Render Reviews
+
+- app/properties/[id]
+
+```tsx
+return (
+  <>
+    {/* after two column section */}
+    <SubmitReview propertyId={property.id} />
+    <PropertyReviews propertyId={property.id} />
+  </>
+);
+```
+
+- components/reviews/PropertyReviews.tsx
+
+```tsx
+import { fetchPropertyReviews } from '@/utils/actions';
+import Title from '@/components/properties/Title';
+
+import ReviewCard from './ReviewCard';
+async function PropertyReviews({ propertyId }: { propertyId: string }) {
+  const reviews = await fetchPropertyReviews(propertyId);
+  if (reviews.length < 1) return null;
+  return (
+    <div className='mt-8'>
+      <Title text='Reviews' />
+      <div className='grid md:grid-cols-2 gap-8 mt-4 '>
+        {reviews.map((review) => {
+          const { comment, rating } = review;
+          const { firstName, profileImage } = review.profile;
+          const reviewInfo = {
+            comment,
+            rating,
+            name: firstName,
+            image: profileImage,
+          };
+          return <ReviewCard key={review.id} reviewInfo={reviewInfo} />;
+        })}
+      </div>
+    </div>
+  );
+}
+export default PropertyReviews;
+```
+
+### ReviewCard Component
+
+```tsx
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import Rating from './Rating';
+import Comment from './Comment';
+type ReviewCardProps = {
+  reviewInfo: {
+    comment: string;
+    rating: number;
+    name: string;
+    image: string;
+  };
+  children?: React.ReactNode;
+};
+
+function ReviewCard({ reviewInfo, children }: ReviewCardProps) {
+  return (
+    <Card className='relative'>
+      <CardHeader>
+        <div className='flex items-center'>
+          <img
+            src={reviewInfo.image}
+            alt='profile'
+            className='w-12 h-12 rounded-full object-cover'
+          />
+          <div className='ml-4'>
+            <h3 className='text-sm font-bold capitalize mb-1'>
+              {reviewInfo.name}
+            </h3>
+            <Rating rating={reviewInfo.rating} />
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <Comment comment={reviewInfo.comment} />
+      </CardContent>
+      {/* delete button later */}
+      <div className='absolute top-3 right-3'>{children}</div>
+    </Card>
+  );
+}
+export default ReviewCard;
+```
+
+### Rating
+
+```tsx
+import { FaStar, FaRegStar } from 'react-icons/fa';
+
+function Rating({ rating }: { rating: number }) {
+  // rating = 2
+  // 1 <= 2 true
+  // 2 <= 2 true
+  // 3 <= 2 false
+  // ....
+  const stars = Array.from({ length: 5 }, (_, i) => i + 1 <= rating);
+
+  return (
+    <div className='flex items-center gap-x-1'>
+      {stars.map((isFilled, i) => {
+        const className = `w-3 h-3 ${
+          isFilled ? 'text-primary' : 'text-gray-400'
+        }`;
+        return isFilled ? (
+          <FaStar className={className} key={i} />
+        ) : (
+          <FaRegStar className={className} key={i} />
+        );
+      })}
+    </div>
+  );
+}
+
+export default Rating;
+```
+
+### Comment
+
+```tsx
+'use client';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+function Comment({ comment }: { comment: string }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const toggleExpanded = () => {
+    setIsExpanded(!isExpanded);
+  };
+  const longComment = comment.length > 130;
+  const displayComment =
+    longComment && !isExpanded ? `${comment.slice(0, 130)}...` : comment;
+
+  return (
+    <div>
+      <p className='text-sm'>{displayComment}</p>
+      {longComment && (
+        <Button
+          variant='link'
+          className='pl-0 text-muted-foreground'
+          onClick={toggleExpanded}
+        >
+          {isExpanded ? 'Show Less' : 'Show More'}
+        </Button>
+      )}
+    </div>
+  );
+}
+
+export default Comment;
+```
+
+### Fetch User's Reviews and Delete Review
+
+```ts
+export const fetchPropertyReviewsByUser = async () => {
+  const user = await getAuthUser();
+  const reviews = await db.review.findMany({
+    where: {
+      profileId: user.id,
+    },
+    select: {
+      id: true,
+      rating: true,
+      comment: true,
+      property: {
+        select: {
+          name: true,
+          image: true,
+        },
+      },
+    },
+  });
+  return reviews;
+};
+
+export const deleteReviewAction = async (prevState: { reviewId: string }) => {
+  const { reviewId } = prevState;
+  const user = await getAuthUser();
+
+  try {
+    await db.review.delete({
+      where: {
+        id: reviewId,
+        profileId: user.id,
+      },
+    });
+
+    revalidatePath('/reviews');
+    return { message: 'Review deleted successfully' };
+  } catch (error) {
+    return renderError(error);
+  }
+};
+```
+
+### Icon Button
+
+- components/form/Buttons.tsx
+
+```tsx
+import { LuTrash2, LuPenSquare } from 'react-icons/lu';
+
+type actionType = 'edit' | 'delete';
+export const IconButton = ({ actionType }: { actionType: actionType }) => {
+  const { pending } = useFormStatus();
+
+  const renderIcon = () => {
+    switch (actionType) {
+      case 'edit':
+        return <LuPenSquare />;
+      case 'delete':
+        return <LuTrash2 />;
+      default:
+        const never: never = actionType;
+        throw new Error(`Invalid action type: ${never}`);
+    }
+  };
+
+  return (
+    <Button
+      type='submit'
+      size='icon'
+      variant='link'
+      className='p-2 cursor-pointer'
+    >
+      {pending ? <ReloadIcon className=' animate-spin' /> : renderIcon()}
+    </Button>
+  );
+};
+```
+
+### Reviews Page
+
+- app/reviews/page.tsx
+
+```tsx
+import EmptyList from '@/components/home/EmptyList';
+import {
+  deleteReviewAction,
+  fetchPropertyReviewsByUser,
+} from '@/utils/actions';
+import ReviewCard from '@/components/reviews/ReviewCard';
+import Title from '@/components/properties/Title';
+import FormContainer from '@/components/form/FormContainer';
+import { IconButton } from '@/components/form/Buttons';
+async function ReviewsPage() {
+  const reviews = await fetchPropertyReviewsByUser();
+  if (reviews.length === 0) return <EmptyList />;
+
+  return (
+    <>
+      <Title text='Your Reviews' />
+      <section className='grid md:grid-cols-2 gap-8 mt-4 '>
+        {reviews.map((review) => {
+          const { comment, rating } = review;
+          const { name, image } = review.property;
+          const reviewInfo = {
+            comment,
+            rating,
+            name,
+            image,
+          };
+          return (
+            <ReviewCard key={review.id} reviewInfo={reviewInfo}>
+              <DeleteReview reviewId={review.id} />
+            </ReviewCard>
+          );
+        })}
+      </section>
+    </>
+  );
+}
+
+const DeleteReview = ({ reviewId }: { reviewId: string }) => {
+  const deleteReview = deleteReviewAction.bind(null, { reviewId });
+  return (
+    <FormContainer action={deleteReview}>
+      <IconButton actionType='delete' />
+    </FormContainer>
+  );
+};
+
+export default ReviewsPage;
+```
+
+- loading.tsx
+
+```tsx
+'use client';
+
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+function loading() {
+  return (
+    <section className='grid md:grid-cols-2 gap-8 mt-4 '>
+      <ReviewLoadingCard />
+      <ReviewLoadingCard />
+    </section>
+  );
+}
+
+const ReviewLoadingCard = () => {
+  return (
+    <Card>
+      <CardHeader>
+        <div className='flex items-center'>
+          <Skeleton className='w-12 h-12 rounded-full' />
+          <div className='ml-4'>
+            <Skeleton className='w-[150px] h-4 mb-2' />
+            <Skeleton className='w-[100px] h-4' />
+          </div>
+        </div>
+      </CardHeader>
+    </Card>
+  );
+};
+
+export default loading;
+```
+
+### Allow Review
+
+- actions.ts
+
+```ts
+export const findExistingReview = async (
+  userId: string,
+  propertyId: string
+) => {
+  return db.review.findFirst({
+    where: {
+      profileId: userId,
+      propertyId: propertyId,
+    },
+  });
+};
+```
+
+- app/properties/[id]
+
+```tsx
+import { findExistingReview } from '@/utils/actions';
+import { auth } from '@clerk/nextjs/server';
+
+async function PropertyDetailsPage({ params }: { params: { id: string } }) {
+  const { userId } = auth();
+  const isNotOwner = property.profile.clerkId !== userId;
+  const reviewDoesNotExist =
+    userId && isNotOwner && !(await findExistingReview(userId, property.id));
+
+  return <>{reviewDoesNotExist && <SubmitReview propertyId={property.id} />}</>;
+}
+```
+
+### PropertyRating - Complete
+
+- actions
+
+```ts
+export async function fetchPropertyRating(propertyId: string) {
+  const result = await db.review.groupBy({
+    by: ['propertyId'],
+    _avg: {
+      rating: true,
+    },
+    _count: {
+      rating: true,
+    },
+    where: {
+      propertyId,
+    },
+  });
+
+  // empty array if no reviews
+  return {
+    rating: result[0]?._avg.rating?.toFixed(1) ?? 0,
+    count: result[0]?._count.rating ?? 0,
+  };
+}
+```
+
+- components/card/PropertyRating.tsx
+
+```tsx
+import { fetchPropertyRating } from '@/utils/actions';
+import { FaStar } from 'react-icons/fa';
+
+async function PropertyRating({
+  propertyId,
+  inPage,
+}: {
+  propertyId: string;
+  inPage: boolean;
+}) {
+  const { rating, count } = await fetchPropertyRating(propertyId);
+  if (count === 0) return null;
+  const className = `flex gap-1 items-center ${inPage ? 'text-md' : 'text-xs'}`;
+  const countText = count === 1 ? 'review' : 'reviews';
+  const countValue = `(${count}) ${inPage ? countText : ''}`;
+  return (
+    <span className={className}>
+      <FaStar className='w-3 h-3' />
+      {rating} {countValue}
+    </span>
+  );
+}
+
+export default PropertyRating;
+```
