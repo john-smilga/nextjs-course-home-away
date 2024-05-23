@@ -4211,3 +4211,1157 @@ async function PropertyRating({
 
 export default PropertyRating;
 ```
+
+### Booking Model
+
+- schema.prisma
+
+```prisma
+model Booking {
+  id        String   @id @default(uuid())
+  profile   Profile  @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
+  profileId String
+  property   Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  propertyId String
+  orderTotal     Int
+  totalNights    Int
+  checkIn   DateTime
+  checkOut  DateTime
+  paymentStatus Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Profile {
+  bookings Booking[]
+}
+model Property {
+  bookings Booking[]
+}
+
+```
+
+```bash
+npx prisma db push
+```
+
+- restart server !!!
+
+### Fetch Bookings
+
+- actions.ts
+
+```ts
+export const fetchPropertyDetails = (id: string) => {
+  return db.property.findUnique({
+    where: {
+      id,
+    },
+    include: {
+      profile: true,
+      bookings: {
+        select: {
+          checkIn: true,
+          checkOut: true,
+        },
+      },
+    },
+  });
+};
+```
+
+### Booking Types
+
+- utils/types.ts
+
+```ts
+export type DateRangeSelect = {
+  startDate: Date;
+  endDate: Date;
+  key: string;
+};
+
+export type Booking = {
+  checkIn: Date;
+  checkOut: Date;
+};
+```
+
+### Booking Components
+
+- remove @/components/properties/BookingCalendar.tsx
+
+- create @/components/booking
+  - BookingCalendar.tsx
+  - BookingContainer.tsx
+  - BookingForm.tsx
+  - BookingWrapper.tsx
+  - ConfirmBooking.tsx
+
+### Zustand
+
+[Docs](https://docs.pmnd.rs/zustand/getting-started/introduction)
+
+```sh
+npm install zustand
+```
+
+### Setup Store
+
+- utils/store.ts
+
+```ts
+import { create } from 'zustand';
+import { Booking } from './types';
+import { DateRange } from 'react-day-picker';
+// Define the state's shape
+type PropertyState = {
+  propertyId: string;
+  price: number;
+  bookings: Booking[];
+  range: DateRange | undefined;
+};
+
+// Create the store
+export const useProperty = create<PropertyState>(() => {
+  return {
+    propertyId: '',
+    price: 0,
+    bookings: [],
+    range: undefined,
+  };
+});
+```
+
+### BookingWrapper
+
+```tsx
+'use client';
+
+import { useProperty } from '@/utils/store';
+import { Booking } from '@/utils/types';
+import BookingCalendar from './BookingCalendar';
+import BookingContainer from './BookingContainer';
+import { useEffect } from 'react';
+
+type BookingWrapperProps = {
+  propertyId: string;
+  price: number;
+  bookings: Booking[];
+};
+export default function BookingWrapper({
+  propertyId,
+  price,
+  bookings,
+}: BookingWrapperProps) {
+  useEffect(() => {
+    useProperty.setState({
+      propertyId,
+      price,
+      bookings,
+    });
+  }, []);
+  return (
+    <>
+      <BookingCalendar />
+      <BookingContainer />
+    </>
+  );
+}
+```
+
+- properties/[id]/page.tsx
+
+```tsx
+const DynamicBookingWrapper = dynamic(
+  () => import('@/components/booking/BookingWrapper'),
+  {
+    ssr: false,
+    loading: () => <Skeleton className='h-[200px] w-full' />,
+  }
+);
+
+return (
+  <div className='lg:col-span-4 flex flex-col items-center'>
+    {/* calendar */}
+    <DynamicBookingWrapper
+      propertyId={property.id}
+      price={property.price}
+      bookings={property.bookings}
+    />
+  </div>
+);
+```
+
+### Helper Functions
+
+- utils/calendar.ts
+
+```ts
+import { DateRange } from 'react-day-picker';
+import { Booking } from '@/utils/types';
+
+export const defaultSelected: DateRange = {
+  from: undefined,
+  to: undefined,
+};
+
+export const generateBlockedPeriods = ({
+  bookings,
+  today,
+}: {
+  bookings: Booking[];
+  today: Date;
+}) => {
+  today.setHours(0, 0, 0, 0); // Set the time to 00:00:00.000
+
+  const disabledDays: DateRange[] = [
+    ...bookings.map((booking) => ({
+      from: booking.checkIn,
+      to: booking.checkOut,
+    })),
+    {
+      from: new Date(0), // This is 01 January 1970 00:00:00 UTC.
+      to: new Date(today.getTime() - 24 * 60 * 60 * 1000), // This is yesterday.
+    },
+  ];
+  return disabledDays;
+};
+
+export const generateDateRange = (range: DateRange | undefined): string[] => {
+  if (!range || !range.from || !range.to) return [];
+
+  let currentDate = new Date(range.from);
+  const endDate = new Date(range.to);
+  const dateRange: string[] = [];
+
+  while (currentDate <= endDate) {
+    const dateString = currentDate.toISOString().split('T')[0];
+    dateRange.push(dateString);
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  return dateRange;
+};
+
+export const generateDisabledDates = (
+  disabledDays: DateRange[]
+): { [key: string]: boolean } => {
+  if (disabledDays.length === 0) return {};
+
+  const disabledDates: { [key: string]: boolean } = {};
+
+  disabledDays.forEach((range) => {
+    if (!range.from || !range.to) return;
+
+    let currentDate = new Date(range.from);
+    const endDate = new Date(range.to);
+
+    while (currentDate <= endDate) {
+      const dateString = currentDate.toISOString().split('T')[0];
+      disabledDates[dateString] = true;
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+  });
+
+  return disabledDates;
+};
+
+export function calculateDaysBetween({
+  checkIn,
+  checkOut,
+}: {
+  checkIn: Date;
+  checkOut: Date;
+}) {
+  // Calculate the difference in milliseconds
+  const diffInMs = Math.abs(checkOut.getTime() - checkIn.getTime());
+
+  // Convert the difference in milliseconds to days
+  const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+
+  return diffInDays;
+}
+```
+
+### BoookingCalendar
+
+```tsx
+'use client';
+import { Calendar } from '@/components/ui/calendar';
+import { useEffect, useState } from 'react';
+import { useToast } from '@/components/ui/use-toast';
+import { DateRange } from 'react-day-picker';
+import { useProperty } from '@/utils/store';
+
+import {
+  generateDisabledDates,
+  generateDateRange,
+  defaultSelected,
+  generateBlockedPeriods,
+} from '@/utils/calendar';
+
+function BookingCalendar() {
+  const currentDate = new Date();
+
+  const [range, setRange] = useState<DateRange | undefined>(defaultSelected);
+
+  useEffect(() => {
+    useProperty.setState({ range });
+  }, [range]);
+
+  return (
+    <Calendar
+      mode='range'
+      defaultMonth={currentDate}
+      selected={range}
+      onSelect={setRange}
+      className='mb-4'
+    />
+  );
+}
+export default BookingCalendar;
+```
+
+### BookingContainer
+
+```tsx
+'use client';
+
+import { useProperty } from '@/utils/store';
+import ConfirmBooking from './ConfirmBooking';
+import BookingForm from './BookingForm';
+function BookingContainer() {
+  const { range } = useProperty((state) => state);
+
+  if (!range || !range.from || !range.to) return null;
+  if (range.to.getTime() === range.from.getTime()) return null;
+  return (
+    <div className='w-full'>
+      <BookingForm />
+      <ConfirmBooking />
+    </div>
+  );
+}
+
+export default BookingContainer;
+```
+
+### CalculateTotals
+
+- utils/calculateTotals.ts
+
+```ts
+import { calculateDaysBetween } from '@/utils/calendar';
+
+type BookingDetails = {
+  checkIn: Date;
+  checkOut: Date;
+  price: number;
+};
+
+export const calculateTotals = ({
+  checkIn,
+  checkOut,
+  price,
+}: BookingDetails) => {
+  const totalNights = calculateDaysBetween({ checkIn, checkOut });
+  const subTotal = totalNights * price;
+  const cleaning = 21;
+  const service = 40;
+  const tax = subTotal * 0.1;
+  const orderTotal = subTotal + cleaning + service + tax;
+  return { totalNights, subTotal, cleaning, service, tax, orderTotal };
+};
+```
+
+### BookingForm
+
+```tsx
+import { calculateTotals } from '@/utils/calculateTotals';
+import { Card, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { useProperty } from '@/utils/store';
+import { formatCurrency } from '@/utils/format';
+function BookingForm() {
+  const { range, price } = useProperty((state) => state);
+  const checkIn = range?.from as Date;
+  const checkOut = range?.to as Date;
+
+  const { totalNights, subTotal, cleaning, service, tax, orderTotal } =
+    calculateTotals({
+      checkIn,
+      checkOut,
+      price,
+    });
+  return (
+    <Card className='p-8 mb-4'>
+      <CardTitle className='mb-8'>Summary </CardTitle>
+      <FormRow label={`$${price} x ${totalNights} nights`} amount={subTotal} />
+      <FormRow label='Cleaning Fee' amount={cleaning} />
+      <FormRow label='Service Fee' amount={service} />
+      <FormRow label='Tax' amount={tax} />
+      <Separator className='mt-4' />
+      <CardTitle className='mt-8'>
+        <FormRow label='Booking Total' amount={orderTotal} />
+      </CardTitle>
+    </Card>
+  );
+}
+
+function FormRow({ label, amount }: { label: string; amount: number }) {
+  return (
+    <p className='flex justify-between text-sm mb-2'>
+      <span>{label}</span>
+      <span>{formatCurrency(amount)}</span>
+    </p>
+  );
+}
+
+export default BookingForm;
+```
+
+### ConfirmBooking
+
+- action.ts
+
+```ts
+export const createBookingAction = async () => {
+  return { message: 'create booking' };
+};
+```
+
+```tsx
+'use client';
+import { SignInButton, useAuth } from '@clerk/nextjs';
+import { Button } from '@/components/ui/button';
+import { useProperty } from '@/utils/store';
+import FormContainer from '@/components/form/FormContainer';
+import { SubmitButton } from '@/components/form/Buttons';
+import { createBookingAction } from '@/utils/actions';
+
+function ConfirmBooking() {
+  const { userId } = useAuth();
+  const { propertyId, range } = useProperty((state) => state);
+  const checkIn = range?.from as Date;
+  const checkOut = range?.to as Date;
+  if (!userId)
+    return (
+      <SignInButton mode='modal'>
+        <Button type='button' className='w-full'>
+          Sign In to Complete Booking
+        </Button>
+      </SignInButton>
+    );
+
+  const createBooking = createBookingAction.bind(null, {
+    propertyId,
+    checkIn,
+    checkOut,
+  });
+  return (
+    <section>
+      <FormContainer action={createBooking}>
+        <SubmitButton text='Reserve' className='w-full' />
+      </FormContainer>
+    </section>
+  );
+}
+export default ConfirmBooking;
+```
+
+### CreateBookingAction
+
+```tsx
+export const createBookingAction = async (prevState: {
+  propertyId: string;
+  checkIn: Date;
+  checkOut: Date;
+}) => {
+  const user = await getAuthUser();
+
+  const { propertyId, checkIn, checkOut } = prevState;
+  const property = await db.property.findUnique({
+    where: { id: propertyId },
+    select: { price: true },
+  });
+  if (!property) {
+    return { message: 'Property not found' };
+  }
+  const { orderTotal, totalNights } = calculateTotals({
+    checkIn,
+    checkOut,
+    price: property.price,
+  });
+
+  try {
+    const booking = await db.booking.create({
+      data: {
+        checkIn,
+        checkOut,
+        orderTotal,
+        totalNights,
+        profileId: user.id,
+        propertyId,
+      },
+    });
+  } catch (error) {
+    return renderError(error);
+  }
+  redirect('/bookings');
+};
+```
+
+### Blocked Periods/Dates
+
+BookingCalendar.tsx
+
+```tsx
+function BookingCalendar() {
+  const bookings = useProperty((state) => state.bookings);
+  const blockedPeriods = generateBlockedPeriods({
+    bookings,
+    today: currentDate,
+  });
+
+  return (
+    <Calendar
+      mode='range'
+      defaultMonth={currentDate}
+      selected={range}
+      onSelect={setRange}
+      className='mb-4'
+      // add disabled
+      disabled={blockedPeriods}
+    />
+  );
+}
+export default BookingCalendar;
+```
+
+### Unavailable Dates
+
+BookingCalendar.tsx
+
+```tsx
+
+unction BookingCalendar() {
+
+  const { toast } = useToast();
+  const unavailableDates = generateDisabledDates(blockedPeriods);
+
+  useEffect(() => {
+    const selectedRange = generateDateRange(range);
+    const isDisabledDateIncluded = selectedRange.some((date) => {
+      if (unavailableDates[date]) {
+        setRange(defaultSelected);
+        toast({
+          description: 'Some dates are booked. Please select again.',
+        });
+        return true;
+      }
+      return false;
+    });
+    useProperty.setState({ range });
+  }, [range]);
+
+
+  return (
+    <Calendar
+      mode='range'
+      defaultMonth={currentDate}
+      selected={range}
+      onSelect={setRange}
+      className='mb-4'
+      // add disabled
+      disabled={blockedPeriods}
+    />
+  );
+}
+export default BookingCalendar;
+
+
+```
+
+### Fetch Bookings and Delete Booking
+
+- actions.ts
+
+```ts
+export const fetchBookings = async () => {
+  const user = await getAuthUser();
+  const bookings = await db.booking.findMany({
+    where: {
+      profileId: user.id,
+    },
+    include: {
+      property: {
+        select: {
+          id: true,
+          name: true,
+          country: true,
+        },
+      },
+    },
+    orderBy: {
+      checkIn: 'desc',
+    },
+  });
+  return bookings;
+};
+
+export async function deleteBookingAction(prevState: { bookingId: string }) {
+  const { bookingId } = prevState;
+  const user = await getAuthUser();
+
+  try {
+    const result = await db.booking.delete({
+      where: {
+        id: bookingId,
+        profileId: user.id,
+      },
+    });
+
+    revalidatePath('/bookings');
+    return { message: 'Booking deleted successfully' };
+  } catch (error) {
+    return renderError(error);
+  }
+}
+```
+
+### Bookings Page
+
+- utils/format.ts
+
+```ts
+export const formatDate = (date: Date) => {
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(date);
+};
+```
+
+Bookings.tsx
+
+```tsx
+import EmptyList from '@/components/home/EmptyList';
+import CountryFlagAndName from '@/components/card/CountryFlagAndName';
+import Link from 'next/link';
+
+import { formatDate, formatCurrency } from '@/utils/format';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+
+import FormContainer from '@/components/form/FormContainer';
+import { IconButton } from '@/components/form/Buttons';
+import { fetchBookings } from '@/utils/actions';
+import { deleteBookingAction } from '@/utils/actions';
+
+async function BookingsPage() {
+  const bookings = await fetchBookings();
+  if (bookings.length === 0) {
+    return <EmptyList />;
+  }
+  return (
+    <div className='mt-16'>
+      <h4 className='mb-4 capitalize'>total bookings : {bookings.length}</h4>
+      <Table>
+        <TableCaption>A list of your recent bookings.</TableCaption>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Property Name</TableHead>
+            <TableHead>Country</TableHead>
+            <TableHead>Nights</TableHead>
+            <TableHead>Total</TableHead>
+            <TableHead>Check In</TableHead>
+            <TableHead>Check Out</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {bookings.map((booking) => {
+            const { id, orderTotal, totalNights, checkIn, checkOut } = booking;
+            const { id: propertyId, name, country } = booking.property;
+            const startDate = formatDate(checkIn);
+            const endDate = formatDate(checkOut);
+            return (
+              <TableRow key={id}>
+                <TableCell>
+                  <Link
+                    href={`/properties/${propertyId}`}
+                    className='underline text-muted-foreground tracking-wide'
+                  >
+                    {name}
+                  </Link>
+                </TableCell>
+                <TableCell>
+                  <CountryFlagAndName countryCode={country} />
+                </TableCell>
+                <TableCell>{totalNights}</TableCell>
+                <TableCell>{formatCurrency(orderTotal)}</TableCell>
+                <TableCell>{startDate}</TableCell>
+                <TableCell>{endDate}</TableCell>
+                <TableCell>
+                  <DeleteBooking bookingId={id} />
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
+function DeleteBooking({ bookingId }: { bookingId: string }) {
+  const deleteBooking = deleteBookingAction.bind(null, { bookingId });
+  return (
+    <FormContainer action={deleteBooking}>
+      <IconButton actionType='delete' />
+    </FormContainer>
+  );
+}
+
+export default BookingsPage;
+```
+
+### LoadingTable
+
+- create @/components/booking/LoadingTable.tsx
+
+```tsx
+import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@radix-ui/react-dropdown-menu';
+
+function LoadingTable({ rows }: { rows?: number }) {
+  const tableRows = Array.from({ length: rows || 5 }, (_, i) => {
+    return (
+      <div className='mb-4' key={i}>
+        <Skeleton className='w-full h-8 rounded' />
+        <Separator />
+      </div>
+    );
+  });
+  return <>{tableRows}</>;
+}
+export default LoadingTable;
+```
+
+### Fetch and Delete Rentals
+
+- actions.ts
+
+```ts
+export const fetchRentals = async () => {
+  const user = await getAuthUser();
+  const rentals = await db.property.findMany({
+    where: {
+      profileId: user.id,
+    },
+    select: {
+      id: true,
+      name: true,
+      price: true,
+    },
+  });
+
+  const rentalsWithBookingSums = await Promise.all(
+    rentals.map(async (rental) => {
+      const totalNightsSum = await db.booking.aggregate({
+        where: {
+          propertyId: rental.id,
+          paymentStatus: true,
+        },
+        _sum: {
+          totalNights: true,
+        },
+      });
+
+      const orderTotalSum = await db.booking.aggregate({
+        where: {
+          propertyId: rental.id,
+          paymentStatus: true,
+        },
+        _sum: {
+          orderTotal: true,
+        },
+      });
+
+      return {
+        ...rental,
+        totalNightsSum: totalNightsSum._sum.totalNights,
+        orderTotalSum: orderTotalSum._sum.orderTotal,
+      };
+    })
+  );
+
+  return rentalsWithBookingSums;
+};
+
+export async function deleteRentalAction(prevState: { propertyId: string }) {
+  const { propertyId } = prevState;
+  const user = await getAuthUser();
+
+  try {
+    await db.property.delete({
+      where: {
+        id: propertyId,
+        profileId: user.id,
+      },
+    });
+
+    revalidatePath('/rentals');
+    return { message: 'Rental deleted successfully' };
+  } catch (error) {
+    return renderError(error);
+  }
+}
+```
+
+### Rentals Page
+
+- create rentals/loading.tsx
+
+```tsx
+'use client';
+import LoadingTable from '@/components/booking/LoadingTable';
+function loading() {
+  return <LoadingTable />;
+}
+export default loading;
+```
+
+```tsx
+import EmptyList from '@/components/home/EmptyList';
+import { fetchRentals, deleteRentalAction } from '@/utils/actions';
+import Link from 'next/link';
+
+import { formatCurrency } from '@/utils/format';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+
+import FormContainer from '@/components/form/FormContainer';
+import { IconButton } from '@/components/form/Buttons';
+
+async function RentalsPage() {
+  const rentals = await fetchRentals();
+
+  if (rentals.length === 0) {
+    return (
+      <EmptyList
+        heading='No rentals to display.'
+        message="Don't hesitate to create a rental."
+      />
+    );
+  }
+
+  return (
+    <div className='mt-16'>
+      <h4 className='mb-4 capitalize'>Active Properties : {rentals.length}</h4>
+      <Table>
+        <TableCaption>A list of all your properties.</TableCaption>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Property Name</TableHead>
+            <TableHead>Nightly Rate </TableHead>
+            <TableHead>Nights Booked</TableHead>
+            <TableHead>Total Income</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rentals.map((rental) => {
+            const { id: propertyId, name, price } = rental;
+            const { totalNightsSum, orderTotalSum } = rental;
+            return (
+              <TableRow key={propertyId}>
+                <TableCell>
+                  <Link
+                    href={`/properties/${propertyId}`}
+                    className='underline text-muted-foreground tracking-wide'
+                  >
+                    {name}
+                  </Link>
+                </TableCell>
+                <TableCell>{formatCurrency(price)}</TableCell>
+                <TableCell>{totalNightsSum || 0}</TableCell>
+                <TableCell>{formatCurrency(orderTotalSum)}</TableCell>
+
+                <TableCell className='flex items-center gap-x-2'>
+                  <Link href={`/rentals/${propertyId}/edit`}>
+                    <IconButton actionType='edit'></IconButton>
+                  </Link>
+                  <DeleteRental propertyId={propertyId} />
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
+function DeleteRental({ propertyId }: { propertyId: string }) {
+  const deleteRental = deleteRentalAction.bind(null, { propertyId });
+  return (
+    <FormContainer action={deleteRental}>
+      <IconButton actionType='delete' />
+    </FormContainer>
+  );
+}
+
+export default RentalsPage;
+```
+
+### Fetch Rental Details
+
+- actions.ts
+
+```ts
+export const fetchRentalDetails = async (propertyId: string) => {
+  const user = await getAuthUser();
+
+  return db.property.findUnique({
+    where: {
+      id: propertyId,
+      profileId: user.id,
+    },
+  });
+};
+
+export const updatePropertyAction = async () => {
+  return { message: 'update property action' };
+};
+
+export const updatePropertyImageAction = async () => {
+  return { message: 'update property image' };
+};
+```
+
+### Rentals Edit Page
+
+- rentals/[id]/edit/page.tsx
+
+```tsx
+import {
+  fetchRentalDetails,
+  updatePropertyImageAction,
+  updatePropertyAction,
+} from '@/utils/actions';
+import FormContainer from '@/components/form/FormContainer';
+import FormInput from '@/components/form/FormInput';
+import CategoriesInput from '@/components/form/CategoriesInput';
+import PriceInput from '@/components/form/PriceInput';
+import TextAreaInput from '@/components/form/TextAreaInput';
+import CountriesInput from '@/components/form/CountriesInput';
+import CounterInput from '@/components/form/CounterInput';
+import AmenitiesInput from '@/components/form/AmenitiesInput';
+import { SubmitButton } from '@/components/form/Buttons';
+import { redirect } from 'next/navigation';
+import { type Amenity } from '@/utils/amenities';
+import ImageInputContainer from '@/components/form/ImageInputContainer';
+
+async function EditRentalPage({ params }: { params: { id: string } }) {
+  const property = await fetchRentalDetails(params.id);
+
+  if (!property) redirect('/');
+
+  const defaultAmenities: Amenity[] = JSON.parse(property.amenities);
+
+  return (
+    <section>
+      <h1 className='text-2xl font-semibold mb-8 capitalize'>Edit Property</h1>
+      <div className='border p-8 rounded-md '>
+        <ImageInputContainer
+          name={property.name}
+          text='Update Image'
+          action={updatePropertyImageAction}
+          image={property.image}
+        >
+          <input type='hidden' name='id' value={property.id} />
+        </ImageInputContainer>
+
+        <FormContainer action={updatePropertyAction}>
+          <input type='hidden' name='id' value={property.id} />
+          <div className='grid md:grid-cols-2 gap-8 mb-4 mt-8'>
+            <FormInput
+              name='name'
+              type='text'
+              label='Name (20 limit)'
+              defaultValue={property.name}
+            />
+            <FormInput
+              name='tagline'
+              type='text '
+              label='Tagline (30 limit)'
+              defaultValue={property.tagline}
+            />
+            <PriceInput defaultValue={property.price} />
+            <CategoriesInput defaultValue={property.category} />
+            <CountriesInput defaultValue={property.country} />
+          </div>
+
+          <TextAreaInput
+            name='description'
+            labelText='Description (10 - 100 Words)'
+            defaultValue={property.description}
+          />
+
+          <h3 className='text-lg mt-8 mb-4 font-medium'>
+            Accommodation Details
+          </h3>
+          <CounterInput detail='guests' defaultValue={property.guests} />
+          <CounterInput detail='bedrooms' defaultValue={property.bedrooms} />
+          <CounterInput detail='beds' defaultValue={property.beds} />
+          <CounterInput detail='baths' defaultValue={property.baths} />
+          <h3 className='text-lg mt-10 mb-6 font-medium'>Amenities</h3>
+          <AmenitiesInput defaultValue={defaultAmenities} />
+          <SubmitButton text='edit property' className='mt-12' />
+        </FormContainer>
+      </div>
+    </section>
+  );
+}
+export default EditRentalPage;
+```
+
+### Amenities Input
+
+```tsx
+'use client';
+import { useState } from 'react';
+import { amenities, Amenity } from '@/utils/amenities';
+import { Checkbox } from '@/components/ui/checkbox';
+
+function AmenitiesInput({ defaultValue }: { defaultValue?: Amenity[] }) {
+  const amenitiesWithIcons = defaultValue?.map(({ name, selected }) => ({
+    name,
+    selected,
+    icon: amenities.find((amenity) => amenity.name === name)!.icon,
+  }));
+  const [selectedAmenities, setSelectedAmenities] = useState<Amenity[]>(
+    amenitiesWithIcons || amenities
+  );
+  const handleChange = (amenity: Amenity) => {
+    setSelectedAmenities((prev) => {
+      return prev.map((a) => {
+        if (a.name === amenity.name) {
+          return { ...a, selected: !a.selected };
+        }
+        return a;
+      });
+    });
+  };
+
+  return (
+    <section>
+      <input
+        type='hidden'
+        name='amenities'
+        value={JSON.stringify(selectedAmenities)}
+      />
+      <div className='grid grid-cols-2 gap-4'>
+        {selectedAmenities.map((amenity) => {
+          return (
+            <div key={amenity.name} className='flex items-center space-x-2'>
+              <Checkbox
+                id={amenity.name}
+                checked={amenity.selected}
+                onCheckedChange={() => handleChange(amenity)}
+              />
+              <label
+                htmlFor={amenity.name}
+                className='text-sm font-medium leading-none capitalize flex gap-x-2 items-center'
+              >
+                {amenity.name} <amenity.icon className='w-4 h-4' />
+              </label>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+export default AmenitiesInput;
+```
+
+### Update Property Action
+
+```ts
+export const updatePropertyAction = async (
+  prevState: any,
+  formData: FormData
+): Promise<{ message: string }> => {
+  const user = await getAuthUser();
+  const propertyId = formData.get('id') as string;
+
+  try {
+    const rawData = Object.fromEntries(formData);
+    const validatedFields = validateWithZodSchema(propertySchema, rawData);
+    await db.property.update({
+      where: {
+        id: propertyId,
+        profileId: user.id,
+      },
+      data: {
+        ...validatedFields,
+      },
+    });
+
+    revalidatePath(`/rentals/${propertyId}/edit`);
+    return { message: 'Update Successful' };
+  } catch (error) {
+    return renderError(error);
+  }
+};
+```
+
+### Update Property Image Action
+
+```ts
+export const updatePropertyImageAction = async (
+  prevState: any,
+  formData: FormData
+): Promise<{ message: string }> => {
+  const user = await getAuthUser();
+  const propertyId = formData.get('id') as string;
+
+  try {
+    const image = formData.get('image') as File;
+    const validatedFields = validateWithZodSchema(imageSchema, { image });
+    const fullPath = await uploadImage(validatedFields.image);
+
+    await db.property.update({
+      where: {
+        id: propertyId,
+        profileId: user.id,
+      },
+      data: {
+        image: fullPath,
+      },
+    });
+    revalidatePath(`/rentals/${propertyId}/edit`);
+    return { message: 'Property Image Updated Successful' };
+  } catch (error) {
+    return renderError(error);
+  }
+};
+```
