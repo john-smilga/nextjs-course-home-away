@@ -4156,6 +4156,33 @@ async function PropertyDetailsPage({ params }: { params: { id: string } }) {
 }
 ```
 
+Prisma's findUnique and findFirst methods are used to retrieve a single record from the database, but they have some differences in their behavior:
+
+- findUnique: This method is used when you want to retrieve a single record that matches a unique constraint or a primary key. If no record is found, it returns null.
+
+- findFirst: This method is used when you want to retrieve a single record that matches a non-unique constraint. It can also be used with ordering and filtering. If no record is found, it returns null.
+
+In summary, use findUnique when you're sure the field you're querying by is unique, and use findFirst when you're querying by a non-unique field or need more complex queries with ordering and filtering.
+
+```ts
+const user = await prisma.user.findUnique({
+  where: {
+    email: 'alice@prisma.io',
+  },
+});
+
+const user = await prisma.user.findFirst({
+  where: {
+    email: {
+      contains: 'prisma.io',
+    },
+  },
+  orderBy: {
+    name: 'asc',
+  },
+});
+```
+
 ### PropertyRating - Complete
 
 - actions
@@ -4864,8 +4891,7 @@ import {
 
 import FormContainer from '@/components/form/FormContainer';
 import { IconButton } from '@/components/form/Buttons';
-import { fetchBookings } from '@/utils/actions';
-import { deleteBookingAction } from '@/utils/actions';
+import { fetchBookings, deleteBookingAction } from '@/utils/actions';
 
 async function BookingsPage() {
   const bookings = await fetchBookings();
@@ -4940,21 +4966,33 @@ export default BookingsPage;
 - create @/components/booking/LoadingTable.tsx
 
 ```tsx
-import { Skeleton } from '@/components/ui/skeleton';
-import { Separator } from '@radix-ui/react-dropdown-menu';
+import { Skeleton } from '../ui/skeleton';
 
 function LoadingTable({ rows }: { rows?: number }) {
   const tableRows = Array.from({ length: rows || 5 }, (_, i) => {
     return (
       <div className='mb-4' key={i}>
         <Skeleton className='w-full h-8 rounded' />
-        <Separator />
       </div>
     );
   });
   return <>{tableRows}</>;
 }
 export default LoadingTable;
+```
+
+- create app/bookings/loading.tsx
+
+```tsx
+'use client';
+
+import LoadingTable from '@/components/booking/LoadingTable';
+
+function loading() {
+  return <LoadingTable />;
+}
+
+export default loading;
 ```
 
 ### Fetch and Delete Rentals
@@ -4980,7 +5018,6 @@ export const fetchRentals = async () => {
       const totalNightsSum = await db.booking.aggregate({
         where: {
           propertyId: rental.id,
-          paymentStatus: true,
         },
         _sum: {
           totalNights: true,
@@ -4990,7 +5027,6 @@ export const fetchRentals = async () => {
       const orderTotalSum = await db.booking.aggregate({
         where: {
           propertyId: rental.id,
-          paymentStatus: true,
         },
         _sum: {
           orderTotal: true,
