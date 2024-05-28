@@ -1,6 +1,7 @@
 ### Next App
 
 ```sh
+
 npx create-next-app@latest home-away
 ```
 
@@ -5400,4 +5401,430 @@ export const updatePropertyImageAction = async (
     return renderError(error);
   }
 };
+```
+
+### Reservations
+
+- in app/reservations create page.tsx and loading.tsx
+
+```tsx
+'use client';
+
+import LoadingTable from '@/components/booking/LoadingTable';
+
+function loading() {
+  return <LoadingTable />;
+}
+export default loading;
+```
+
+- add to links
+
+utils/links.ts
+
+```ts
+export const links: NavLink[] = [
+  { href: '/', label: 'home' },
+  { href: '/favorites ', label: 'favorites' },
+  { href: '/bookings ', label: 'bookings' },
+  { href: '/reviews ', label: 'reviews' },
+  { href: '/reservations ', label: 'reservations' },
+  { href: '/rentals/create ', label: 'create rental' },
+  { href: '/rentals', label: 'my rentals' },
+  { href: '/profile ', label: 'profile' },
+];
+```
+
+### Fetch Reservations
+
+```ts
+export const fetchReservations = async () => {
+  const user = await getAuthUser();
+
+  const reservations = await db.booking.findMany({
+    where: {
+      property: {
+        profileId: user.id,
+      },
+    },
+
+    orderBy: {
+      createdAt: 'desc', // or 'asc' for ascending order
+    },
+
+    include: {
+      property: {
+        select: {
+          id: true,
+          name: true,
+          price: true,
+          country: true,
+        },
+      }, // include property details in the result
+    },
+  });
+  return reservations;
+};
+```
+
+### Reservations Page
+
+```tsx
+import { fetchReservations } from '@/utils/actions';
+import Link from 'next/link';
+import EmptyList from '@/components/home/EmptyList';
+import CountryFlagAndName from '@/components/card/CountryFlagAndName';
+
+import { formatDate, formatCurrency } from '@/utils/format';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+
+async function ReservationsPage() {
+  const reservations = await fetchReservations();
+
+  if (reservations.length === 0) {
+    return <EmptyList />;
+  }
+
+  return (
+    <div className='mt-16'>
+      <h4 className='mb-4 capitalize'>
+        total reservations : {reservations.length}
+      </h4>
+      <Table>
+        <TableCaption>A list of your recent reservations.</TableCaption>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Property Name</TableHead>
+            <TableHead>Country</TableHead>
+            <TableHead>Nights</TableHead>
+            <TableHead>Total</TableHead>
+            <TableHead>Check In</TableHead>
+            <TableHead>Check Out</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {reservations.map((item) => {
+            const { id, orderTotal, totalNights, checkIn, checkOut } = item;
+            const { id: propertyId, name, country } = item.property;
+            const startDate = formatDate(checkIn);
+            const endDate = formatDate(checkOut);
+            return (
+              <TableRow key={id}>
+                <TableCell>
+                  <Link
+                    href={`/properties/${propertyId}`}
+                    className='underline text-muted-foreground tracking-wide'
+                  >
+                    {name}
+                  </Link>
+                </TableCell>
+                <TableCell>
+                  <CountryFlagAndName countryCode={country} />
+                </TableCell>
+                <TableCell>{totalNights}</TableCell>
+                <TableCell>{formatCurrency(orderTotal)}</TableCell>
+                <TableCell>{startDate}</TableCell>
+                <TableCell>{endDate}</TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+export default ReservationsPage;
+```
+
+### Admin User - Setup
+
+- create app/admin/page.tsx
+- add admin to links
+- create components/admin
+  - Chart.tsx
+  - ChartsContainer.tsx
+  - Loading.tsx
+  - StatsCard.tsx
+  - StatsContainer.tsx
+
+### Admin User - Middleware
+
+- refactor middleware
+- create ENV variable with userId
+- add to VERCEL
+
+```ts
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+
+import { NextResponse } from 'next/server';
+
+const isPublicRoute = createRouteMatcher(['/', '/properties(.*)']);
+
+const isAdminRoute = createRouteMatcher(['/admin(.*)']);
+export default clerkMiddleware(async (auth, req) => {
+  const isAdminUser = auth().userId === process.env.ADMIN_USER_ID;
+  if (isAdminRoute(req) && !isAdminUser) {
+    return NextResponse.redirect(new URL('/', req.url));
+  }
+  if (!isPublicRoute(req)) auth().protect();
+});
+
+export const config = {
+  matcher: ['/((?!.*\\..*|_next).*)', '/', '/(api|trpc)(.*)'],
+};
+```
+
+### Admin User - LinksDropdown
+
+- LinksDropdown.tsx
+
+```tsx
+import { auth } from '@clerk/nextjs/server';
+
+function LinksDropdown() {
+  const { userId } = auth();
+  const isAdminUser = userId === process.env.ADMIN_USER_ID;
+}
+return (
+  <>
+    {links.map((link) => {
+      if (link.label === 'admin' && !isAdminUser) return null;
+      return (
+        <DropdownMenuItem key={link.href}>
+          <Link href={link.href} className='capitalize w-full'>
+            {link.label}
+          </Link>
+        </DropdownMenuItem>
+      );
+    })}
+  </>
+);
+```
+
+### Admin User - Loading
+
+```tsx
+import { Card, CardHeader } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+
+export function StatsLoadingContainer() {
+  return (
+    <div className='mt-8 grid md:grid-cols-2 gap-4 lg:grid-cols-3'>
+      <LoadingCard />
+      <LoadingCard />
+      <LoadingCard />
+    </div>
+  );
+}
+
+function LoadingCard() {
+  return (
+    <Card>
+      <CardHeader>
+        <Skeleton className='w-full h-20 rounded' />
+      </CardHeader>
+    </Card>
+  );
+}
+
+export function ChartsLoadingContainer() {
+  return <Skeleton className='mt-16 w-full h-[300px] rounded' />;
+}
+```
+
+### Admin User - Main Page
+
+```tsx
+import ChartsContainer from '@/components/admin/ChartsContainer';
+import StatsContainer from '@/components/admin/StatsContainer';
+import {
+  ChartsLoadingContainer,
+  StatsLoadingContainer,
+} from '@/components/admin/Loading';
+import { Suspense } from 'react';
+async function AdminPage() {
+  return (
+    <>
+      <Suspense fallback={<StatsLoadingContainer />}>
+        <StatsContainer />
+      </Suspense>
+      <Suspense fallback={<ChartsLoadingContainer />}>
+        <ChartsContainer />
+      </Suspense>
+    </>
+  );
+}
+export default AdminPage;
+```
+
+### Admin User - Fetch Stats
+
+```ts
+const getAdminUser = async () => {
+  const user = await getAuthUser();
+  if (user.id !== process.env.ADMIN_USER_ID) redirect('/');
+  return user;
+};
+
+export const fetchStats = async () => {
+  await getAdminUser();
+
+  const usersCount = await db.profile.count();
+  const propertiesCount = await db.property.count();
+  const bookingsCount = await db.booking.count();
+
+  return {
+    usersCount,
+    propertiesCount,
+    bookingsCount,
+  };
+};
+```
+
+### Admin User - StatsContainer
+
+```tsx
+import { fetchStats } from '@/utils/actions';
+import StatsCard from './StatsCard';
+async function StatsContainer() {
+  const data = await fetchStats();
+
+  return (
+    <div className='mt-8 grid md:grid-cols-2 gap-4 lg:grid-cols-3'>
+      <StatsCard title='users' value={data?.usersCount || 0} />
+      <StatsCard title='properties' value={data?.propertiesCount || 0} />
+      <StatsCard title='bookings' value={data?.bookingsCount || 0} />
+    </div>
+  );
+}
+export default StatsContainer;
+```
+
+### Admin User - StatsCard
+
+```tsx
+import { Card, CardHeader } from '@/components/ui/card';
+
+type StatsCardsProps = {
+  title: string;
+  value: number;
+};
+
+function StatsCards({ title, value }: StatsCardsProps) {
+  return (
+    <Card className='bg-muted'>
+      <CardHeader className='flex flex-row justify-between items-center'>
+        <h3 className='capitalize text-3xl font-bold'>{title}</h3>
+        <span className='text-primary text-5xl font-extrabold'>{value}</span>
+      </CardHeader>
+    </Card>
+  );
+}
+
+export default StatsCards;
+```
+
+### Admin User - Fetch Charts Data
+
+```ts
+export const fetchChartsData = async () => {
+  await getAdminUser();
+  const date = new Date();
+  date.setMonth(date.getMonth() - 6);
+  const sixMonthsAgo = date;
+
+  const bookings = await db.booking.findMany({
+    where: {
+      createdAt: {
+        gte: sixMonthsAgo,
+      },
+    },
+    orderBy: {
+      createdAt: 'asc',
+    },
+  });
+  let bookingsPerMonth = bookings.reduce((total, current) => {
+    const date = formatDate(current.createdAt, true);
+
+    const existingEntry = total.find((entry) => entry.date === date);
+    if (existingEntry) {
+      existingEntry.count += 1;
+    } else {
+      total.push({ date, count: 1 });
+    }
+    return total;
+  }, [] as Array<{ date: string; count: number }>);
+  return bookingsPerMonth;
+};
+```
+
+### Admin User - ChartsContainer
+
+```tsx
+import { fetchChartsData } from '@/utils/actions';
+import Chart from './Chart';
+
+async function ChartsContainer() {
+  const bookings = await fetchChartsData();
+  if (bookings.length < 1) return null;
+
+  return <Chart data={bookings} />;
+}
+export default ChartsContainer;
+```
+
+### Recharts
+
+[Recharts](https://recharts.org/en-US/)
+
+```sh
+npm install recharts
+```
+
+### Admin User - Chart Component
+
+```tsx
+'use client';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
+
+type ChartPropsType = {
+  data: {
+    date: string;
+    count: number;
+  }[];
+};
+
+function Chart({ data }: ChartPropsType) {
+  return (
+    <section className='mt-24'>
+      <h1 className='text-4xl font-semibold text-center'>Monthly Bookings</h1>
+      <ResponsiveContainer width='100%' height={300}>
+        <BarChart data={data} margin={{ top: 50 }}>
+          <CartesianGrid strokeDasharray='3 3' />
+          <XAxis dataKey='date' />
+          <YAxis allowDecimals={false} />
+          <Tooltip />
+          <Bar dataKey='count' fill='#F97215' barSize={75} />
+        </BarChart>
+      </ResponsiveContainer>
+    </section>
+  );
+}
+export default Chart;
 ```
