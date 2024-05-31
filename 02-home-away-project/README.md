@@ -180,6 +180,8 @@ function Logo() {
     </Button>
   );
 }
+
+export default Logo;
 ```
 
 ### NavSearch
