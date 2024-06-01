@@ -4497,6 +4497,7 @@ export const generateDisabledDates = (
   return disabledDates;
 };
 
+
 export function calculateDaysBetween({
   checkIn,
   checkOut,
