@@ -1,11 +1,10 @@
-import { Card, CardHeader } from '@/components/ui/card';
-
-type StatsCardsProps = {
+import { Card, CardHeader } from '../ui/card';
+type StatsCardProps = {
   title: string;
-  value: number;
+  value: number | string;
 };
 
-function StatsCards({ title, value }: StatsCardsProps) {
+function StatsCard({ title, value }: StatsCardProps) {
   return (
     <Card className='bg-muted'>
       <CardHeader className='flex flex-row justify-between items-center'>
@@ -15,5 +14,4 @@ function StatsCards({ title, value }: StatsCardsProps) {
     </Card>
   );
 }
-
-export default StatsCards;
+export default StatsCard;

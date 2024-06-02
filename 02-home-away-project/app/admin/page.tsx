@@ -1,11 +1,12 @@
 import ChartsContainer from '@/components/admin/ChartsContainer';
-import StatsContainer from '@/components/admin/StatsContainer';
 import {
   ChartsLoadingContainer,
   StatsLoadingContainer,
 } from '@/components/admin/Loading';
+import StatsContainer from '@/components/admin/StatsContainer';
 import { Suspense } from 'react';
-async function AdminPage() {
+
+function AdminPage() {
   return (
     <>
       <Suspense fallback={<StatsLoadingContainer />}>

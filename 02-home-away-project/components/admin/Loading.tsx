@@ -1,5 +1,5 @@
-import { Card, CardHeader } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardHeader } from '../ui/card';
+import { Skeleton } from '../ui/skeleton';
 
 export function StatsLoadingContainer() {
   return (
