@@ -913,6 +913,96 @@ name String
 
 ```
 
+- npx prisma migrate dev --name init
+- npx prisma db push
+
+npx prisma migrate dev --name init creates a new migration for your database schema
+changes and applies it, while npx prisma db push directly updates the database schema without creating a migration. In the context of databases, a migration is set of operations, that modify the database schema, helping it evolve over time while preserving existing data.
+
+```bash
+npx prisma db push
+```
+
+```bash
+npx prisma studio
+```
+
+## Optional - Prisma Crud
+
+[Prisma Docs](https://www.prisma.io/docs/concepts/components/prisma-client/crud)
+
+- Create Single Record
+
+```js
+const task = await prisma.task.create({
+  data: {
+    content: 'some task',
+  },
+});
+```
+
+- Get All Records
+
+```js
+const tasks = await prisma.task.findMany();
+```
+
+- Get record by ID or unique identifier
+
+```js
+// By unique identifier
+const user = await prisma.user.findUnique({
+  where: {
+    email: 'elsa@prisma.io',
+  },
+});
+
+// By ID
+const task = await prisma.task.findUnique({
+  where: {
+    id: id,
+  },
+});
+```
+
+- Update Record
+
+```js
+const updateTask = await prisma.task.update({
+  where: {
+    id: id,
+  },
+  data: {
+    content: 'updated task',
+  },
+});
+```
+
+- Update or create records
+
+```js
+const upsertTask = await prisma.task.upsert({
+  where: {
+    id: id,
+  },
+  update: {
+    content: 'some value',
+  },
+  create: {
+    content: 'some value',
+  },
+});
+```
+
+- Delete a single record
+
+```js
+const deleteTask = await prisma.task.delete({
+  where: {
+    id: id,
+  },
+});
+```
 
 ### Profile Model
 
