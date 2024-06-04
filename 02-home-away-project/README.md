@@ -164,7 +164,7 @@ return (
 npm install react-icons
 ```
 
-[Lucide Icons](https://react-icons.github.io/react-icons/)
+[React Icons](https://react-icons.github.io/react-icons/)
 
 ```tsx
 import Link from 'next/link';
