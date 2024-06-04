@@ -901,6 +901,16 @@ datasource db {
   url               = env("DATABASE_URL")
   directUrl         = env("DIRECT_URL")
 }
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model TestProfile {
+id  String @id @default(uuid())
+name String
+}
+
 ```
 
 
@@ -919,6 +929,14 @@ model Profile {
   updatedAt    DateTime   @updatedAt
 
 }
+```
+
+```bash
+npx prisma db push
+```
+
+```bash
+npx prisma studio
 ```
 
 ### CreateProfile Action - Complete
