@@ -3124,6 +3124,8 @@ export default FavoritesPage;
 
 ### fetchPropertyDetails
 
+- utils/actions.ts
+
 ```ts
 export const fetchPropertyDetails = (id: string) => {
   return db.property.findUnique({
