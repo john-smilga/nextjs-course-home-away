@@ -4898,7 +4898,7 @@ BookingCalendar.tsx
 
 ```tsx
 
-unction BookingCalendar() {
+function BookingCalendar() {
 
   const { toast } = useToast();
   const unavailableDates = generateDisabledDates(blockedPeriods);
