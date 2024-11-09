@@ -2,7 +2,7 @@
 
 ```sh
 
-npx create-next-app@latest home-away
+npx create-next-app@14 home-away
 ```
 
 ```sh
